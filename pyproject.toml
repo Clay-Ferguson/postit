@@ -1,0 +1,13 @@
+[project]
+name = "postit"
+version = "0.1.0"
+description = "Rapidly create a timestamped markdown note from a single dialog"
+requires-python = ">=3.11"
+dependencies = [
+    "PyQt6>=6.6",
+]
+
+# Not an installable package: uv only builds the virtualenv from the
+# dependencies above, and start.sh runs the code straight out of the tree.
+[tool.uv]
+package = false

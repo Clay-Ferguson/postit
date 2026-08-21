@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Postit
+Comment=Rapidly create a timestamped markdown note
+Exec=/mnt/projects/Postit/start.sh
+Icon=/mnt/projects/Postit/postit.png
+Terminal=false
+Type=Application
+Categories=Utility;TextEditor;
+StartupNotify=false
+StartupWMClass=postit
