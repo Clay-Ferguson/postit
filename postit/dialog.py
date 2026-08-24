@@ -48,16 +48,23 @@ def field_border() -> str:
     opts it out of the style's native border too, so this is drawn explicitly
     rather than left to the theme.
 
-    Lightening is tried first, to match the lightened background — but on a
-    light theme the Base color is already white, where `lighter()` saturates
-    and returns white again, leaving an outline indistinguishable from the
-    field it is supposed to outline. When that happens, darken instead.
+    Lightening is tried first, to match the lightened background — but both
+    `lighter()` and `darker()` work in HSV, by scaling the value component,
+    so each is a no-op at the end of the scale it is heading toward. On a
+    light theme the Base color is already white and lightening returns white
+    again, leaving an outline indistinguishable from the field it is supposed
+    to outline; darkening covers that case. On a pure black Base (some
+    high-contrast and OLED themes) the value component is zero and *neither*
+    direction moves, so the last resort is a fixed gray.
     """
     background = QColor(field_background())
     lightened = background.lighter(140)
     if lightened != background:
         return lightened.name()
-    return background.darker(115).name()
+    darkened = background.darker(115)
+    if darkened != background:
+        return darkened.name()
+    return "#2e2e2e"
 
 
 class NoteDialog(QDialog):
