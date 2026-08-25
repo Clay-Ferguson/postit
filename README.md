@@ -10,6 +10,8 @@ It is a PyQt6 rewrite of an earlier bash + zenity version, with the same file
 format and the same date handling. The one behavior change is that the old
 version's "Note saved" desktop notification is gone — saving is silent.
 
+![](docs/img/postit-screenshot.png)
+
 ## Running
 
 ```bash
@@ -97,5 +99,5 @@ land inside the same second, the second one gets a `-2` suffix
 | `install.sh` / `uninstall.sh` | Desktop entry management. |
 | `postit.desktop` | Desktop entry template; `install.sh` rewrites `Exec=` and `Icon=`. |
 
-See `USER_GUIDE.md` for a walkthrough aimed at using the app rather than
+See [USER_GUIDE.md](/docs/USER_GUIDE.md) for a walkthrough aimed at using the app rather than
 working on it.

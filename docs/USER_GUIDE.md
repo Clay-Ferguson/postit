@@ -12,6 +12,8 @@ past notes to browse, no settings screen. Every note becomes a separate
 markdown file in one folder, named after the moment you wrote it, and you read
 them back with whatever you already use for markdown files.
 
+![](img/postit-screenshot.png)
+
 ## Installing
 
 You need two things already on your machine: Python 3.11 or newer, and
