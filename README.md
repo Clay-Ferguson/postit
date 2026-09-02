@@ -24,7 +24,33 @@ directory is created on first save if it doesn't exist yet.
 `start.sh` runs the app through [uv](https://docs.astral.sh/uv/), which creates
 and refreshes the virtualenv from `pyproject.toml` on every run — there is no
 install step and nothing to activate. You need Python 3.11+ and `uv` on your
-PATH; nothing else.
+PATH, plus the sibling checkout described next.
+
+### The `windowchrome` sibling project
+
+Postit's colored title bar and window border come from
+**[windowchrome](https://github.com/<your-account>/windowchrome)**, a small
+reusable PyQt6 library kept in its own repository so several apps can wear the
+same chrome. It is **not on PyPI**: `pyproject.toml` resolves it by path, from a
+directory sitting *beside* this one.
+
+```bash
+cd ..                      # the directory holding Postit/
+git clone https://github.com/<your-account>/windowchrome.git
+```
+
+giving:
+
+```
+projects/
+├── Postit/
+└── windowchrome/          <- must be a sibling, and named this
+```
+
+If it is missing, `./start.sh` fails immediately with an unresolved path
+dependency rather than with anything subtle. The checkout is used in place —
+`uv` installs it editable, so there is nothing to build and an edit there is
+live here on the next run.
 
 ## Installing the desktop icon
 

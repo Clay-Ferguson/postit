@@ -40,7 +40,51 @@ Three modules, split so that everything testable is free of Qt:
   light theme where `Base` is already white and `lighter()` saturates.
 - `postit/__main__.py` — argparse, `QApplication`, run the dialog, write the
   note, report failures with a `QMessageBox` (a bare stderr traceback is
-  invisible when launched from a desktop icon).
+  invisible when launched from a desktop icon). Also the two `windowchrome`
+  setup calls, which are order-sensitive — see below.
+
+## Things that will bite you
+
+- **The window chrome lives in `windowchrome`, not here — read
+  `../windowchrome/README.md` before touching any of it.** The colored title bar
+  — and with it the thin frame the decoration draws down the sides and along
+  the bottom — is a sibling library (`[tool.uv.sources]` in `pyproject.toml`
+  points at `../windowchrome`, editable, so an edit there is live here with no
+  reinstall; the checkout has to *be* a sibling or `uv run` fails outright).
+  Its README carries the whole of what was measured: that the bar is colorable
+  only on Wayland and only by repurposing three application palette roles; that
+  `libadwaita.so` links no `QPalette` symbol at all while `bradient` does,
+  which is what `QT_WAYLAND_DECORATION` is choosing between; that the
+  decoration's `QMargins{3, 30, 3, 3}` are compiled-in constants, so neither
+  the bar's height nor the frame's 3px is adjustable; and that giving a widget a
+  stylesheet severs its palette inheritance, which is why an application event
+  filter hands the body colors back — not hypothetical here, since the text area
+  and the button box are both styled.
+
+  What this app owes it, and what will break if it is forgotten:
+  `windowchrome.configure(POSTIT_THEME)` **before** `QApplication` and
+  `windowchrome.install(app)` **after** it — both in `__main__`, and both
+  order-sensitive, the first because the decoration plugin is chosen by an
+  environment variable read inside that constructor. That is the whole
+  integration: two calls, and nothing about the dialog's layout changes — it
+  keeps the gray `dialogFrame` QFrame it always had.
+
+  `POSTIT_THEME` is in `postit/__init__.py`, beside `APP_NAME` and
+  `UI_POINT_SIZE`. It matches the other apps here deliberately.
+
+  Nothing in this app derives a color from the palette's `Window` or
+  `WindowText` roles, so the `body_window_color()` / `body_text_color()` rule
+  the library states costs nothing here — `field_background()` reads `Base`,
+  which the title bar never touches. Keep it that way: a new color derived from
+  `Window` would come out tinted with the title bar blue.
+
+  The `QMessageBox` on a failed save deliberately calls none of this and keeps
+  the title bar's colors, being transient.
+
+  The library briefly also painted a thicker border just inside the window
+  (`bordered_body()`), which replaced this dialog's own gray frame. It was
+  removed: the decoration's own 3px frame, which takes the title bar's color
+  for free, is what the design wants. Do not reintroduce it.
 
 ## Deliberate non-features
 

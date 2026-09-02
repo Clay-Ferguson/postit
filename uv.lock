@@ -8,10 +8,14 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "pyqt6" },
+    { name = "windowchrome" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "pyqt6", specifier = ">=6.6" }]
+requires-dist = [
+    { name = "pyqt6", specifier = ">=6.6" },
+    { name = "windowchrome", editable = "../windowchrome" },
+]
 
 [[package]]
 name = "pyqt6"
@@ -70,3 +74,14 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/c6/d3/30e57a4ceeb222348e60862183e3e7159490944b428230f728b465614928/pyqt6_sip-13.12.0-cp314-cp314-win_amd64.whl", hash = "sha256:9717fc4271e5d71e1cecadbb3340c3990ea9d58923fbf076b70cf8bc0f339639", size = 54971, upload-time = "2026-08-02T12:04:45.001Z" },
     { url = "https://files.pythonhosted.org/packages/1c/cb/806b3fcc7ab9dc77fc42a26dc010f7d87aa32c230af3ddebb958eed02e80/pyqt6_sip-13.12.0-cp314-cp314-win_arm64.whl", hash = "sha256:6815e719d1fd4c71c0d3ed85e7e91b615959d949dac7af6e3f11a29a3a565676", size = 49576, upload-time = "2026-08-02T12:04:46.074Z" },
 ]
+
+[[package]]
+name = "windowchrome"
+version = "0.1.0"
+source = { editable = "../windowchrome" }
+dependencies = [
+    { name = "pyqt6" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "pyqt6", specifier = ">=6.6" }]

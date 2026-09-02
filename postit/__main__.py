@@ -6,10 +6,11 @@ import argparse
 import os
 import sys
 
+import windowchrome
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication, QDialog, QMessageBox
 
-from . import APP_NAME
+from . import APP_NAME, POSTIT_THEME
 from .dialog import NoteDialog
 from .note import TemplateNotFound, write_note
 
@@ -36,6 +37,12 @@ def main() -> int:
     args = parser.parse_args()
     notes_dir = os.path.abspath(os.path.expanduser(args.notes_dir))
 
+    # Before the QApplication, and it has to be: `configure()` picks the Wayland
+    # decoration plugin through an environment variable that the platform plugin
+    # reads during that constructor and never again. See
+    # `../windowchrome/README.md`.
+    windowchrome.configure(POSTIT_THEME)
+
     app = QApplication(sys.argv)
     app.setApplicationName(APP_NAME)
     app.setApplicationDisplayName(APP_NAME)
@@ -45,6 +52,13 @@ def main() -> int:
     app.setDesktopFileName("postit")
     if os.path.isfile(ICON):
         app.setWindowIcon(QIcon(ICON))
+
+    # After the QApplication, and after anything that changes the application
+    # palette: `install()` captures the body's own surface and text colors at
+    # the moment it runs, then hands the title bar those palette roles. Postit
+    # tunes no palette of its own, so here is as late as it gets — but a palette
+    # changed after this line is one it never saw.
+    windowchrome.install(app)
 
     dialog = NoteDialog()
     dialog.show()
