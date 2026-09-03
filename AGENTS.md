@@ -30,9 +30,17 @@ Three modules, split so that everything testable is free of Qt:
   - `unique_path` falls back to a `-2`, `-3`, … suffix when two notes land in
     the same second, so a note is never silently overwritten.
 - `postit/dialog.py` — `NoteDialog`, plus the styling helpers it uses (no
-  separate `style.py`: there is only one dialog to share them with). The content
-  sits in a bordered `QFrame` rather than on the `QDialog` itself, because a
-  QDialog won't reliably paint a stylesheet border. `field_background()` and
+  separate `style.py`: there is only one dialog to share them with). The text
+  area and the button box sit directly on the `QDialog` in a single layout with
+  one 10px margin — no inner frame, no second level of padding; the window
+  decoration's own frame is the only border the app has. The note is set in the
+  desktop's fixed-width face at `NOTE_POINT_SIZE`, larger than the
+  `UI_POINT_SIZE` the buttons use; the family is asked for through
+  `QFontDatabase.systemFont(FixedFont)` rather than named, so don't replace it
+  with a hardcoded "Monospace"/"DejaVu Sans Mono" that may not be installed.
+  Wrapping stays at the widget edge — monospace here is for a steadier, more
+  legible note, not for lining up columns, so there is still no horizontal
+  scrollbar. `field_background()` and
   `field_border()` derive their colors from the live `QPalette` at build time —
   not import time, since no theme is attached until `QApplication` exists — so
   they track light and dark desktop themes. `field_border()` lightens by
@@ -66,11 +74,11 @@ Three modules, split so that everything testable is free of Qt:
   `windowchrome.install(app)` **after** it — both in `__main__`, and both
   order-sensitive, the first because the decoration plugin is chosen by an
   environment variable read inside that constructor. That is the whole
-  integration: two calls, and nothing about the dialog's layout changes — it
-  keeps the gray `dialogFrame` QFrame it always had.
+  integration: two calls, and nothing about the dialog's layout changes.
 
-  `POSTIT_THEME` is in `postit/__init__.py`, beside `APP_NAME` and
-  `UI_POINT_SIZE`. It matches the other apps here deliberately.
+  `POSTIT_THEME` is in `postit/__init__.py`, beside `APP_NAME`,
+  `UI_POINT_SIZE` and `NOTE_POINT_SIZE`. It matches the other apps here
+  deliberately.
 
   Nothing in this app derives a color from the palette's `Window` or
   `WindowText` roles, so the `body_window_color()` / `body_text_color()` rule
@@ -82,9 +90,10 @@ Three modules, split so that everything testable is free of Qt:
   the title bar's colors, being transient.
 
   The library briefly also painted a thicker border just inside the window
-  (`bordered_body()`), which replaced this dialog's own gray frame. It was
-  removed: the decoration's own 3px frame, which takes the title bar's color
-  for free, is what the design wants. Do not reintroduce it.
+  (`bordered_body()`), and this dialog once drew a gray `QFrame` border of its
+  own inside that. Both are gone: the decoration's own 3px frame, which takes
+  the title bar's color for free, is the only border the design wants. Do not
+  reintroduce either one, and don't nest the content in a frame again.
 
 ## Deliberate non-features
 

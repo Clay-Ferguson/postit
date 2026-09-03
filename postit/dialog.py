@@ -6,23 +6,21 @@ exactly one dialog, so there is nothing to share them with.
 
 from __future__ import annotations
 
-from PyQt6.QtGui import QColor, QPalette
+from PyQt6.QtGui import QColor, QFontDatabase, QPalette
 from PyQt6.QtWidgets import (
     QApplication,
     QDialog,
     QDialogButtonBox,
-    QFrame,
     QPlainTextEdit,
     QVBoxLayout,
     QWidget,
 )
 
-from . import APP_NAME, UI_POINT_SIZE
+from . import APP_NAME, NOTE_POINT_SIZE, UI_POINT_SIZE
 
-# A plain QDialog's outer edge is easy to lose against the desktop behind it,
-# so the real content sits inside a bordered QFrame instead — a QDialog won't
-# reliably paint a stylesheet border of its own, but a QFrame always will.
-BORDER_STYLE = "#dialogFrame { border: 1px solid #a0a0a0; border-radius: 6px; }"
+# The window decoration draws its own frame around the whole window (see
+# `../windowchrome/README.md`), so the dialog adds no border of its own — the
+# content sits directly on the QDialog with one level of padding, nothing more.
 BUTTON_STYLE = f"QPushButton {{ font-size: {UI_POINT_SIZE}pt; padding: 8px 20px; }}"
 
 DIALOG_WIDTH = 700
@@ -83,12 +81,15 @@ class NoteDialog(QDialog):
         self.setWindowTitle(APP_NAME)
         self.resize(DIALOG_WIDTH, DIALOG_HEIGHT)
 
-        # Notes are prose, so this keeps the theme's proportional font and wraps
-        # at the widget edge — unlike a code editor, there are no columns to
-        # line up and nothing worth a horizontal scrollbar.
+        # The note is set large and in the desktop's own fixed-width face, asked
+        # for through QFontDatabase rather than named here, so it follows
+        # whatever the system has configured instead of guessing at a family
+        # that may not be installed. Lines still wrap at the widget edge — this
+        # is prose in a monospace font, not code, so there is nothing worth a
+        # horizontal scrollbar.
         self._text_edit = QPlainTextEdit()
-        font = self._text_edit.font()
-        font.setPointSize(UI_POINT_SIZE)
+        font = QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont)
+        font.setPointSize(NOTE_POINT_SIZE)
         self._text_edit.setFont(font)
         self._text_edit.setStyleSheet(
             f"background-color: {field_background()}; border: 1px solid {field_border()};"
@@ -103,19 +104,11 @@ class NoteDialog(QDialog):
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
 
-        frame = QFrame(self)
-        frame.setObjectName("dialogFrame")
-        frame.setStyleSheet(BORDER_STYLE)
-
-        frame_layout = QVBoxLayout(frame)
-        frame_layout.setContentsMargins(24, 24, 24, 24)
-        frame_layout.setSpacing(14)
-        frame_layout.addWidget(self._text_edit)
-        frame_layout.addWidget(buttons)
-
-        outer_layout = QVBoxLayout(self)
-        outer_layout.setContentsMargins(10, 10, 10, 10)
-        outer_layout.addWidget(frame)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setSpacing(10)
+        layout.addWidget(self._text_edit)
+        layout.addWidget(buttons)
 
         self._text_edit.textChanged.connect(self._validate)
         self._validate()

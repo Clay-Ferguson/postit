@@ -5,9 +5,14 @@ from windowchrome import ChromeTheme
 APP_NAME = "Postit"
 
 # A postit note is scribbled on and dismissed in a few seconds, not studied, so
-# the text area runs a few points above the desktop default. Shared by the
-# dialog's text area and its buttons so they read as one piece of UI.
+# the UI runs a few points above the desktop default. This is the chrome size —
+# the dialog's buttons — and the floor the note text sits above.
 UI_POINT_SIZE = 15
+
+# The note itself is bigger again, and set in the desktop's fixed-width face
+# (see `dialog.py`). Monospace faces read a shade smaller than a proportional
+# one at the same point size, so the gap here is partly making that back.
+NOTE_POINT_SIZE = 16
 
 # The window's title bar, and with it the thin frame the decoration draws down
 # the sides and along the bottom. `windowchrome` owns both — see
