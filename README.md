@@ -1,14 +1,8 @@
 # Postit
 
-A one-dialog utility for jotting a quick note — the software equivalent of a
-sticky note. Launch it, type, click **Save**, and the text lands in a
-timestamped markdown file with YAML frontmatter. There is no main window and no
-state to manage: the dialog is the whole application, and the process exits as
-soon as the note is written.
+A one-dialog utility for taking a quick note — the software equivalent of a sticky note. Launch it, type, click **Save**, and the text lands in a timestamped markdown file. There is no main window and no state to manage: the dialog is the whole application, and the process exits as soon as the note is written.
 
-It is a PyQt6 rewrite of an earlier bash + zenity version, with the same file
-format and the same date handling. The one behavior change is that the old
-version's "Note saved" desktop notification is gone — saving is silent.
+It is a PyQt6 rewrite of an earlier bash + zenity version, with the same file format and the same date handling. The one behavior change is that the old version's "Note saved" desktop notification is gone — saving is silent.
 
 ![](docs/img/postit-screenshot.png)
 
@@ -18,21 +12,13 @@ version's "Note saved" desktop notification is gone — saving is silent.
 ./start.sh [NOTES_DIR]
 ```
 
-`NOTES_DIR` is where notes get written, and defaults to `~/ferguson`. The
-directory is created on first save if it doesn't exist yet.
+`NOTES_DIR` is where notes get written, and defaults to `~/ferguson`. The directory is created on first save if it doesn't exist yet.
 
-`start.sh` runs the app through [uv](https://docs.astral.sh/uv/), which creates
-and refreshes the virtualenv from `pyproject.toml` on every run — there is no
-install step and nothing to activate. You need Python 3.11+ and `uv` on your
-PATH, plus the sibling checkout described next.
+`start.sh` runs the app through [uv](https://docs.astral.sh/uv/), which creates and refreshes the virtualenv from `pyproject.toml` on every run — there is no install step and nothing to activate. You need Python 3.11+ and `uv` on your PATH, plus the sibling checkout described next.
 
 ### The `windowchrome` sibling project
 
-Postit's colored title bar and window border come from
-**[windowchrome](https://github.com/Clay-Ferguson/windowchrome)**, a small
-reusable PyQt6 library kept in its own repository so several apps can wear the
-same chrome. It is **not on PyPI**: `pyproject.toml` resolves it by path, from a
-directory sitting *beside* this one.
+Postit's colored title bar and window border come from **[windowchrome](https://github.com/Clay-Ferguson/windowchrome)**, a small reusable PyQt6 library kept in its own repository so several apps can wear the same chrome. It is **not on PyPI**: `pyproject.toml` resolves it by path, from a directory sitting *beside* this one.
 
 ```bash
 cd ..                      # the directory holding Postit/
@@ -47,10 +33,7 @@ projects/
 └── windowchrome/          <- must be a sibling, and named this
 ```
 
-If it is missing, `./start.sh` fails immediately with an unresolved path
-dependency rather than with anything subtle. The checkout is used in place —
-`uv` installs it editable, so there is nothing to build and an edit there is
-live here on the next run.
+If it is missing, `./start.sh` fails immediately with an unresolved path dependency rather than with anything subtle. The checkout is used in place — `uv` installs it editable, so there is nothing to build and an edit there is live here on the next run.
 
 ## Installing the desktop icon
 
@@ -58,11 +41,7 @@ live here on the next run.
 ./install.sh
 ```
 
-It prompts for two paths — the program directory (defaults to where the script
-lives) and the notes directory (defaults to `~/ferguson`) — and bakes both into
-`~/.local/share/applications/postit.desktop`, so the launcher entry runs
-`start.sh` with your notes directory as its argument. To change the notes
-directory later, just run `install.sh` again.
+It prompts for two paths — the program directory (defaults to where the script lives) and the notes directory (defaults to `~/ferguson`) — and bakes both into `~/.local/share/applications/postit.desktop`, so the launcher entry runs `start.sh` with your notes directory as its argument. To change the notes directory later, just run `install.sh` again.
 
 `./uninstall.sh` removes the desktop entry.
 
@@ -97,21 +76,13 @@ start: {time}
 | `{time}` | The current time, 12-hour, hour unpadded | `1:05 PM` |
 | `{content}` | Exactly what you typed | |
 
-Edit `note-template.md` to change the frontmatter — different tags, extra
-fields, no frontmatter at all. It's read fresh on every save, so changes take
-effect immediately with no restart.
+Edit `note-template.md` to change the frontmatter — different tags, extra fields, no frontmatter at all. It's read fresh on every save, so changes take effect immediately with no restart.
 
-`{date}` and `{time}` use those slash-and-AM/PM formats for compatibility with
-the Timex Extension, which is why they don't match the filename's timestamp.
-Substitution is literal, so note text containing `&`, backslashes, or even the
-string `{date}` is written through untouched.
+`{date}` and `{time}` use those slash-and-AM/PM formats for compatibility with the Timex Extension, which is why they don't match the filename's timestamp. Substitution is literal, so note text containing `&`, backslashes, or even the string `{date}` is written through untouched.
 
 ## Output files
 
-Notes are named `note-YYYY-MM-DD--HH-MM-SS.md` — no slashes, spaces or colons,
-so they sort chronologically and are painless to type at a shell. If two notes
-land inside the same second, the second one gets a `-2` suffix
-(`note-2026-08-21--13-05-07-2.md`) rather than overwriting the first.
+Notes are named `note-YYYY-MM-DD--HH-MM-SS.md` — no slashes, spaces or colons, so they sort chronologically and are painless to type at a shell. If two notes land inside the same second, the second one gets a `-2` suffix (`note-2026-08-21--13-05-07-2.md`) rather than overwriting the first.
 
 ## Layout
 
@@ -125,5 +96,4 @@ land inside the same second, the second one gets a `-2` suffix
 | `install.sh` / `uninstall.sh` | Desktop entry management. |
 | `postit.desktop` | Desktop entry template; `install.sh` rewrites `Exec=` and `Icon=`. |
 
-See [USER_GUIDE.md](/docs/USER_GUIDE.md) for a walkthrough aimed at using the app rather than
-working on it.
+See [USER_GUIDE.md](/docs/USER_GUIDE.md) for a walkthrough aimed at using the app rather than working on it.
