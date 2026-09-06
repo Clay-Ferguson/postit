@@ -15,6 +15,7 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from windowchrome import apply_scrollbars
 
 from . import APP_NAME, NOTE_POINT_SIZE, UI_POINT_SIZE
 
@@ -27,7 +28,7 @@ DIALOG_WIDTH = 700
 DIALOG_HEIGHT = 500
 
 
-def field_background() -> str:
+def field_background() -> QColor:
     """A background a shade lighter than the theme's default input color.
 
     Computed from the live application palette (rather than a fixed hex) so it
@@ -35,16 +36,20 @@ def field_background() -> str:
     instead of assuming a light or a dark theme. Queried lazily — at dialog-build
     time, not import time — since no theme is attached to the palette until
     QApplication exists.
+
+    Returned as a QColor rather than a hex string because most of what wants
+    it wants the color: `field_border()` derives from it and `apply_scrollbars`
+    is handed it. Only the stylesheet needs `.name()`.
     """
     base = QApplication.palette().color(QPalette.ColorRole.Base)
-    return base.lighter(130).name()
+    return base.lighter(130)
 
 
 def field_border() -> str:
     """A border that contrasts with the field's own background, whichever way
-    that has to go. Setting any QSS on a widget (as `field_background` does)
-    opts it out of the style's native border too, so this is drawn explicitly
-    rather than left to the theme.
+    that has to go. Setting any QSS on a widget (as the dialog does, to paint
+    the field with `field_background()`) opts it out of the style's native
+    border too, so this is drawn explicitly rather than left to the theme.
 
     Lightening is tried first, to match the lightened background — but both
     `lighter()` and `darker()` work in HSV, by scaling the value component,
@@ -55,7 +60,7 @@ def field_border() -> str:
     high-contrast and OLED themes) the value component is zero and *neither*
     direction moves, so the last resort is a fixed gray.
     """
-    background = QColor(field_background())
+    background = field_background()
     lightened = background.lighter(140)
     if lightened != background:
         return lightened.name()
@@ -91,10 +96,18 @@ class NoteDialog(QDialog):
         font = QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont)
         font.setPointSize(NOTE_POINT_SIZE)
         self._text_edit.setFont(font)
+        background = field_background()
         self._text_edit.setStyleSheet(
-            f"background-color: {field_background()}; border: 1px solid {field_border()};"
+            f"background-color: {background.name()}; border: 1px solid {field_border()};"
         )
         self._text_edit.setLineWrapMode(QPlainTextEdit.LineWrapMode.WidgetWidth)
+        # Scroll bars at twice the desktop's own thickness, so they are easier
+        # to grab with the mouse. Styled through the edit's own scroll bar
+        # children, so the edit itself keeps its native rendering — and handed
+        # the field's background, since that is not the palette's Base the
+        # library would otherwise assume and the groove would read as a darker
+        # stripe against the field. See `../windowchrome/README.md` §9.
+        apply_scrollbars(self._text_edit, background)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
