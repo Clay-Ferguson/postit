@@ -19,9 +19,9 @@ from windowchrome import apply_scrollbars
 
 from . import APP_NAME, NOTE_POINT_SIZE, UI_POINT_SIZE
 
-# The window decoration draws its own frame around the whole window (see
-# `../windowchrome/README.md`), so the dialog adds no border of its own — the
-# content sits directly on the QDialog with one level of padding, nothing more.
+# The window decoration draws its own frame around the whole window, so the
+# dialog adds no border of its own — the content sits directly on the QDialog
+# with one level of padding, nothing more.
 BUTTON_STYLE = f"QPushButton {{ font-size: {UI_POINT_SIZE}pt; padding: 8px 20px; }}"
 
 DIALOG_WIDTH = 700

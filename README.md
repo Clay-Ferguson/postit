@@ -18,7 +18,7 @@ It is a PyQt6 rewrite of an earlier bash + zenity version, with the same file fo
 
 ### The `windowchrome` sibling project
 
-Postit's colored title bar and window border come from **[windowchrome](https://github.com/Clay-Ferguson/windowchrome)**, a small reusable PyQt6 library kept in its own repository so several apps can wear the same chrome. It is **not on PyPI**: `pyproject.toml` resolves it by path, from a directory sitting *beside* this one.
+Postit's wide scroll bar comes from **[windowchrome](https://github.com/Clay-Ferguson/windowchrome)**, a small reusable PyQt6 library kept in its own repository so several apps can share the same look. It is **not on PyPI**: `pyproject.toml` resolves it by path, from a directory sitting *beside* this one.
 
 ```bash
 cd ..                      # the directory holding Postit/
