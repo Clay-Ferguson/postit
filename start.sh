@@ -2,7 +2,8 @@
 # Postit launcher.
 #
 # uv builds/refreshes the virtualenv from pyproject.toml on every run, so there
-# is no install step. Usage: ./start.sh [/path/to/notes/dir]
+# is no install step. Usage: ./start.sh
+# (The notes folder and template come from ~/.config/postit/postit-config.yaml.)
 set -euo pipefail
 
 HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"

@@ -4,7 +4,7 @@
 
 Postit is for the thought you need to get out of your head in the next five seconds — a phone number, a thing to look up later, a task you don't want to lose. You click the icon, a box appears, you type, you click **Save**, and it's gone from your screen and safely in a file.
 
-That's the entire application. There's no window that stays open, no list of past notes to browse, no settings screen. Every note becomes a separate markdown file in one folder, named after the moment you wrote it, and you read them back with whatever you already use for markdown files.
+That's the entire application. There's no window that stays open and no list of past notes to browse. Every note becomes a separate markdown file in one folder, named after the moment you wrote it, and you read them back with whatever you already use for markdown files.
 
 ![](img/postit-screenshot.png)
 
@@ -22,33 +22,38 @@ Then, from the Postit folder:
 ./install.sh
 ```
 
-It asks you two questions, and pressing Enter accepts the default for either:
+It doesn't ask you anything. Afterwards, "Postit" appears in your application launcher. Search for it in Activities, then right-click the icon and pin it to your dock — the whole point of the app is being one click away.
 
-1. **Path to the Postit program directory** — where these files live. The default is almost always right.
-2. **Directory to save notes into** — the folder your notes go in. Defaults to `~/ferguson`. It doesn't have to exist yet; Postit creates it when you save your first note.
+To remove the launcher entry, run `./uninstall.sh`. That only removes the icon; your notes and your settings are untouched.
 
-After that, "Postit" appears in your application launcher. Search for it in Activities, then right-click the icon and pin it to your dock — the whole point of the app is being one click away.
+## First Launch
 
-To point Postit at a different notes folder later, run `./install.sh` again and give the new path.
+The first time you open Postit, it shows its **Settings** window instead of the note box, because it needs to know two things:
 
-To remove the launcher entry, run `./uninstall.sh`. That only removes the icon; your notes are untouched.
+1. **Notes folder** — where your notes go. Click **Browse…** to pick one. The folder chooser has a button for creating a new folder, if you want a fresh one.
+2. **Note template** — the file each note is built from. It's already filled in with the template that comes with Postit, so you can leave it alone for now (see [Customizing the Template](#customizing-the-template)).
+
+**Save** stays greyed out until both fields point at something that exists, and a line under the fields tells you what's still missing. Click **Save** and the note box opens, ready for your first note.
+
+Postit won't ask again unless one of those stops working. If you later move or delete your notes folder, for example, Settings reappears the next time you launch.
+
+If you click **Cancel** instead, Postit simply closes. Launch it again when you're ready to choose.
 
 ## Launching
 
 Click the Postit icon. There's no splash screen and no main window — the note box comes straight up, focused and ready for typing.
 
-You can also run it from a terminal, which is handy for sending notes somewhere other than your usual folder:
+You can also run it from a terminal, from the Postit folder:
 
 ```bash
-./start.sh                    # notes go to ~/ferguson
-./start.sh ~/work/scratch     # notes go to ~/work/scratch
+./start.sh
 ```
 
 The first launch after installing takes a couple of seconds longer while `uv` builds the virtual environment. Every launch after that is immediate.
 
 ## Writing a Note
 
-The dialog is a text area with **Save** and **Cancel** at the bottom.
+The dialog is a text area with **Settings** at the bottom left and **Save** and **Cancel** at the bottom right.
 
 Type anything you like — it's a plain text box, so multiple lines, blank lines, indentation and pasted text all work. Notes are saved as markdown, so if you write markdown (a `- ` list, a `**bold**` word, a `# heading`) it will render as markdown wherever you read your notes later. If you don't, it's just text.
 
@@ -62,7 +67,16 @@ Click **Save**. The note is written and the dialog closes. Nothing else happens 
 
 ### Cancelling
 
-Click **Cancel**, or press `Esc`. The dialog closes and nothing is written — no file is created, and the notes folder isn't even created if it didn't already exist. There is no "are you sure?" prompt, so anything you'd typed is gone.
+Click **Cancel**, or press `Esc`. The dialog closes and nothing is written — no file is created. There is no "are you sure?" prompt, so anything you'd typed is gone.
+
+## Changing Settings
+
+Click **Settings** in the note box to change the notes folder or the template at any time. Whatever you've typed stays put while you do:
+
+- **Save** — the change applies straight away, including to the note you're writing now.
+- **Cancel** — you're back at your note with nothing changed.
+
+The settings are stored in `~/.config/postit/postit-config.yaml`, a small text file you can also edit by hand.
 
 ## What Gets Saved
 
@@ -101,7 +115,7 @@ The filename uses `2026-08-21` because it sorts correctly. The `due:` and `start
 
 ## Customizing the Template
 
-Every note is built from `note-template.md` in the Postit folder. Open it in any editor:
+Every note is built from the template file chosen in Settings. Postit comes with one, `note-template.md` in the Postit folder, which looks like this:
 
 ```markdown
 ---
@@ -124,7 +138,9 @@ The three words in braces get replaced when a note is saved:
 
 Everything else is copied through exactly as written. So you can change the tags, add fields of your own, move `{content}` above the frontmatter, or delete the frontmatter entirely and leave just `{content}` for plain notes with no metadata.
 
-The template is read fresh every time you save, so edits take effect on your very next note — there's nothing to restart or reinstall.
+To make your own, copy `note-template.md` somewhere you keep your own files, edit the copy, and choose it under **Note template** in Settings. Editing the bundled file in place works too, but your own copy can't be replaced when you update Postit.
+
+The template is read fresh every time you save, so edits take effect on your very next note — there's nothing to restart.
 
 A couple of things worth knowing:
 
@@ -133,9 +149,10 @@ A couple of things worth knowing:
 
 ## When Something Goes Wrong
 
-Postit tells you with an error dialog rather than failing silently. The two things that can go wrong:
+Postit tells you with an error dialog rather than failing silently. The things that can go wrong:
 
-- **"Template not found"** — `note-template.md` was moved, renamed or deleted from the Postit folder. Restore it and the file will save on your next try; the note you'd typed is not recovered, so re-type it.
-- **A permissions or path error** — Postit couldn't create the notes folder or write into it. Check that the path you gave `install.sh` is somewhere you can write to, and run `./install.sh` again to correct it if not.
+- **The notes folder or template no longer exists** — it was moved, renamed or deleted while the note box was open. The note you'd typed is not recovered, so re-type it. The next time you launch, Postit opens Settings so you can choose again.
+- **A permissions error** — Postit couldn't write into the notes folder. Click **Settings** and choose a folder you own.
+- **"Could not save settings"** (from the Settings window) — Postit couldn't write `~/.config/postit/postit-config.yaml`. The window stays open so nothing you entered is lost; check that the `.config` folder in your home folder is writable.
 
-In both cases nothing was written, so there's no half-saved file to clean up.
+In every case nothing was written, so there's no half-saved file to clean up.

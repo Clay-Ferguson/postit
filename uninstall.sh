@@ -10,3 +10,8 @@ if [ -f "$DESKTOP_TARGET" ]; then
 else
   echo "Postit desktop entry not found."
 fi
+
+CONFIG_DIR="$HOME/.config/postit"
+if [ -d "$CONFIG_DIR" ]; then
+  echo "Your settings in $CONFIG_DIR were left in place; delete that folder to remove them too."
+fi

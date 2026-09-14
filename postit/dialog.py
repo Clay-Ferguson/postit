@@ -1,7 +1,8 @@
-"""The one dialog: a text area, Save and Cancel.
+"""The note dialog: a text area, with Settings, Save and Cancel below it.
 
-The styling helpers live here rather than in a module of their own — Postit has
-exactly one dialog, so there is nothing to share them with.
+The styling helpers live here rather than in a module of their own. The Settings
+dialog borrows `BUTTON_STYLE` from this module, which is not enough sharing to
+justify a `style.py`.
 """
 
 from __future__ import annotations
@@ -11,13 +12,16 @@ from PyQt6.QtWidgets import (
     QApplication,
     QDialog,
     QDialogButtonBox,
+    QHBoxLayout,
     QPlainTextEdit,
+    QPushButton,
     QVBoxLayout,
     QWidget,
 )
 from windowchrome import apply_scrollbars
 
 from . import APP_NAME, NOTE_POINT_SIZE, UI_POINT_SIZE
+from .config import load_settings
 
 # The window decoration draws its own frame around the whole window, so the
 # dialog adds no border of its own — the content sits directly on the QDialog
@@ -71,7 +75,7 @@ def field_border() -> str:
 
 
 class NoteDialog(QDialog):
-    """A multi-line text area with Save and Cancel underneath it.
+    """A multi-line text area with Settings, Save and Cancel underneath it.
 
     Save stays disabled until there's something other than whitespace to save,
     so an empty note can never be written. Escape rejects the dialog, which is
@@ -117,11 +121,24 @@ class NoteDialog(QDialog):
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
 
+        # Settings sits apart at the left, in a row of our own rather than in
+        # the button box: where a box places an extra button varies by platform
+        # style, and this one should never read as a third way to close the note.
+        settings_button = QPushButton("Settings")
+        settings_button.setStyleSheet(BUTTON_STYLE)
+        settings_button.setAutoDefault(False)
+        settings_button.clicked.connect(self._open_settings)
+
+        button_row = QHBoxLayout()
+        button_row.addWidget(settings_button)
+        button_row.addStretch(1)
+        button_row.addWidget(buttons)
+
         layout = QVBoxLayout(self)
         layout.setContentsMargins(10, 10, 10, 10)
         layout.setSpacing(10)
         layout.addWidget(self._text_edit)
-        layout.addWidget(buttons)
+        layout.addLayout(button_row)
 
         self._text_edit.textChanged.connect(self._validate)
         self._validate()
@@ -131,6 +148,21 @@ class NoteDialog(QDialog):
         # A whitespace-only note would be a file with an empty body, so Save
         # stays disabled — the same check the bash version made with [ -n ... ].
         self._save_button.setEnabled(bool(self._text_edit.toPlainText().strip()))
+
+    def _open_settings(self) -> None:
+        """Change the notes folder or template without losing the note.
+
+        Cancel here only closes the settings. Unlike at startup, there is a note
+        to go back to. Nothing is handed back either way: `__main__` reads the
+        config again when the note is saved.
+        """
+        # Imported here, not at the top: settings.py takes BUTTON_STYLE from
+        # this module, so a top-level import would be circular.
+        from .settings import SettingsDialog
+
+        settings, error = load_settings()
+        SettingsDialog(settings, error, parent=self).exec()
+        self._text_edit.setFocus()
 
     def text(self) -> str:
         """The typed note, exactly as entered apart from trailing whitespace."""
