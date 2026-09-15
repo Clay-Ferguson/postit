@@ -43,7 +43,30 @@ projects/
 
 If it is missing, `./start.sh` fails immediately with an unresolved path dependency rather than with anything subtle. The checkout is used in place — `uv` installs it editable, so there is nothing to build and an edit there is live here on the next run.
 
-## Installing the desktop icon
+## Installing
+
+### As a Debian package
+
+```bash
+./build-deb-install.sh
+sudo apt install ./dist/postit_0.1.0_all.deb
+```
+
+`build-deb-install.sh` builds `dist/postit_<version>_all.deb`, which any Debian-based distribution can install if its repositories carry `python3-pyqt6` and Python 3.11 or newer. It installs:
+
+| Path | What it is |
+|---|---|
+| `/usr/bin/postit` | The launcher. |
+| `/usr/lib/postit/` | The `postit` package, a copy of `windowchrome`, `note-template.md` and `postit.png`. |
+| `/usr/share/applications/postit.desktop` | The application-menu entry. |
+
+PyQt6 and PyYAML aren't bundled. The package depends on the distribution's own `python3-pyqt6` and `python3-yaml`, which `apt` installs along with it, and `uv` isn't needed at all.
+
+Building needs only `dpkg-deb`, which every Debian system has, and the `windowchrome` sibling checkout described above, whose source is copied into the package. The version comes from `pyproject.toml`. The package's Maintainer field comes from your `git config user.name` and `user.email`; override it with `POSTIT_MAINTAINER="Name <email>"`.
+
+Remove the package with `sudo apt remove postit`. Your notes and `~/.config/postit` are untouched.
+
+### From the source checkout
 
 ```bash
 ./install.sh
@@ -52,6 +75,8 @@ If it is missing, `./start.sh` fails immediately with an unresolved path depende
 It asks nothing. It writes `~/.local/share/applications/postit.desktop` pointing at `start.sh` and `postit.png` in this folder; the notes folder and template are chosen in Settings the first time Postit runs.
 
 `./uninstall.sh` removes the desktop entry and leaves the config file where it is.
+
+Use one install or the other. A desktop entry in `~/.local/share/applications` hides the package's, so run `./uninstall.sh` before switching to the `.deb`.
 
 ## The dialog
 
@@ -115,7 +140,8 @@ Notes are named `note-YYYY-MM-DD--HH-MM-SS.md` — no slashes, spaces or colons,
 | `postit/__main__.py` | Entry point: the startup settings check, `QApplication`, error dialogs. |
 | `note-template.md` | The bundled template described above; the default offered in Settings. |
 | `start.sh` | Launcher; runs the app via `uv`. |
-| `install.sh` / `uninstall.sh` | Desktop entry management. |
+| `install.sh` / `uninstall.sh` | Desktop entry management for running from the checkout. |
+| `build-deb-install.sh` | Builds the `.deb` into `dist/`. |
 | `postit.desktop` | Desktop entry template; `install.sh` rewrites `Exec=` and `Icon=`. |
 
 See [USER_GUIDE.md](/docs/USER_GUIDE.md) for a walkthrough aimed at using the app rather than working on it.

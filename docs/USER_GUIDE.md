@@ -10,7 +10,21 @@ That's the entire application. There's no window that stays open and no list of 
 
 ## Installing
 
-You need two things already on your machine: Python 3.11 or newer, and [uv](https://docs.astral.sh/uv/). If you don't have `uv`:
+The easiest way is the Debian package. If you have a `postit_…_all.deb` file, install it with:
+
+```bash
+sudo apt install ./postit_0.1.0_all.deb
+```
+
+`apt` fetches everything Postit needs along with it. To build the package yourself, run `./build-deb-install.sh` in the Postit folder; the file lands in `dist/`.
+
+Afterwards, "Postit" appears in your application launcher. Search for it in Activities, then right-click the icon and pin it to your dock — the whole point of the app is being one click away.
+
+To remove it, run `sudo apt remove postit`. Your notes and your settings are untouched.
+
+### Running from the Postit folder instead
+
+If you'd rather run Postit straight from its folder — to work on it, say — you need Python 3.11 or newer and [uv](https://docs.astral.sh/uv/). If you don't have `uv`:
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -22,9 +36,9 @@ Then, from the Postit folder:
 ./install.sh
 ```
 
-It doesn't ask you anything. Afterwards, "Postit" appears in your application launcher. Search for it in Activities, then right-click the icon and pin it to your dock — the whole point of the app is being one click away.
+It doesn't ask you anything. To remove that launcher entry, run `./uninstall.sh`.
 
-To remove the launcher entry, run `./uninstall.sh`. That only removes the icon; your notes and your settings are untouched.
+Use one install or the other, not both. The launcher `install.sh` creates hides the package's, so run `./uninstall.sh` before switching to the package.
 
 ## First Launch
 
@@ -43,13 +57,9 @@ If you click **Cancel** instead, Postit simply closes. Launch it again when you'
 
 Click the Postit icon. There's no splash screen and no main window — the note box comes straight up, focused and ready for typing.
 
-You can also run it from a terminal, from the Postit folder:
+You can also run it from a terminal: type `postit` if you installed the package, or run `./start.sh` from the Postit folder.
 
-```bash
-./start.sh
-```
-
-The first launch after installing takes a couple of seconds longer while `uv` builds the virtual environment. Every launch after that is immediate.
+When running from the folder, the first launch takes a couple of seconds longer while `uv` builds the virtual environment. Every launch after that is immediate.
 
 ## Writing a Note
 
@@ -115,7 +125,7 @@ The filename uses `2026-08-21` because it sorts correctly. The `due:` and `start
 
 ## Customizing the Template
 
-Every note is built from the template file chosen in Settings. Postit comes with one, `note-template.md` in the Postit folder, which looks like this:
+Every note is built from the template file chosen in Settings. Postit comes with one, `note-template.md`, which looks like this. It's in `/usr/lib/postit/` if you installed the package, or in the Postit folder if you run from source.
 
 ```markdown
 ---
@@ -138,7 +148,7 @@ The three words in braces get replaced when a note is saved:
 
 Everything else is copied through exactly as written. So you can change the tags, add fields of your own, move `{content}` above the frontmatter, or delete the frontmatter entirely and leave just `{content}` for plain notes with no metadata.
 
-To make your own, copy `note-template.md` somewhere you keep your own files, edit the copy, and choose it under **Note template** in Settings. Editing the bundled file in place works too, but your own copy can't be replaced when you update Postit.
+To make your own, copy `note-template.md` somewhere you keep your own files, edit the copy, and choose it under **Note template** in Settings. Don't edit the bundled file in place. In a package install it belongs to the system and is replaced on every upgrade.
 
 The template is read fresh every time you save, so edits take effect on your very next note — there's nothing to restart.
 

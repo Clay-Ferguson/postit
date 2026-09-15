@@ -38,6 +38,12 @@ Five modules, split so that everything testable is free of Qt:
 
 - **The title bar and window frame are the platform's own, and deliberately unstyled.** They used to be colored through `windowchrome`, which on Wayland meant choosing Qt's `bradient` decoration plugin and repurposing the application palette's `Window`/`WindowText` roles and the application font for it, then handing them back to every widget through an application-wide event filter. That was removed as too fragile — it rested on undocumented plugin internals and leaked into unrelated code. Do not reintroduce title-bar or frame coloring, and don't nest the dialog's content in a bordered frame: the decoration's own frame is the only border the design wants.
 
+- **The `.deb` relies on the program's files sitting beside the `postit` package.** `build-deb-install.sh` installs `postit/`, a copy of `windowchrome/`, `note-template.md` and `postit.png` together under `/usr/lib/postit/`.
+  - `config.PROJECT_ROOT` (the parent of the package directory) is how `BUNDLED_TEMPLATE` and `__main__.ICON` are found. Moving those files, or switching to a nested `src/` layout, breaks both the checkout and the package.
+  - PyQt6 and PyYAML come from apt (`python3-pyqt6`, `python3-yaml`) and are not bundled. A new third-party dependency needs a Debian package, and must be added to the script's `Depends:` as well as to `pyproject.toml`.
+  - Both packages' `*.py` files are copied flat, so a subpackage or data file (here or in `windowchrome`) needs the script updated.
+  - The launcher runs `python3 -I`, so neither `PYTHONPATH` nor pip user installs can shadow the system packages.
+
 ## Deliberate behavior
 
 - **No Ctrl+Enter save accelerator.** This is a free-form note, so Enter always means a newline. Don't add one.
