@@ -1,8 +1,10 @@
+# Template only. build-deb-install.sh rewrites Exec= and Icon= for where it is
+# installing to, so the paths below are never used.
 [Desktop Entry]
 Name=Postit
 Comment=Rapidly create a timestamped markdown note
-Exec=/mnt/projects/Postit/start.sh
-Icon=/mnt/projects/Postit/postit.png
+Exec=/path/to/postit/start.sh
+Icon=/path/to/postit/postit.png
 Terminal=false
 Type=Application
 Categories=Utility;TextEditor;

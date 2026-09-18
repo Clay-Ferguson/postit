@@ -88,9 +88,11 @@ exec /usr/bin/python3 -I -c 'import sys; sys.path.insert(0, "/usr/lib/postit"); 
 EOF
 chmod 755 "$STAGE/usr/bin/$PACKAGE"
 
-# The same desktop entry install.sh uses, pointed at the installed launcher and
-# the icon by name (found in /usr/share/pixmaps).
+# The desktop entry, pointed at the installed launcher and the icon by name
+# (found in /usr/share/pixmaps). The template's comment lines are dropped,
+# since they only describe the template.
 sed \
+  -e '/^#/d' \
   -e "s|^Exec=.*|Exec=$PACKAGE|" \
   -e "s|^Icon=.*|Icon=$PACKAGE|" \
   "$HERE/postit.desktop" > "$STAGE/usr/share/applications/postit.desktop"
@@ -149,8 +151,12 @@ echo "Built $DEB"
 echo ""
 echo "Install:  sudo apt install $DEB"
 echo "Remove:   sudo apt remove $PACKAGE"
+# A leftover from the old install.sh, which this package replaced. Its entry in
+# ~/.local/share/applications takes precedence over the package's, so it would
+# keep launching the checkout after the package is installed.
 if [ -f "$HOME/.local/share/applications/postit.desktop" ]; then
   echo ""
-  echo "Note: you have a launcher from install.sh in ~/.local/share/applications,"
-  echo "which hides the package's. Run ./uninstall.sh before installing the package."
+  echo "Note: a per-user launcher in ~/.local/share/applications hides the"
+  echo "package's. Remove it with:"
+  echo "  rm ~/.local/share/applications/postit.desktop"
 fi

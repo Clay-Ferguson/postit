@@ -24,7 +24,7 @@ To remove it, run `sudo apt remove postit`. Your notes and your settings are unt
 
 ### Running from the Postit folder instead
 
-If you'd rather run Postit straight from its folder — to work on it, say — you need Python 3.11 or newer and [uv](https://docs.astral.sh/uv/). If you don't have `uv`:
+The package is the only way to install Postit. If you'd rather run it straight from its folder — to work on it, say — there's nothing to install: you just need Python 3.11 or newer and [uv](https://docs.astral.sh/uv/). If you don't have `uv`:
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -33,12 +33,10 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 Then, from the Postit folder:
 
 ```bash
-./install.sh
+./start.sh
 ```
 
-It doesn't ask you anything. To remove that launcher entry, run `./uninstall.sh`.
-
-Use one install or the other, not both. The launcher `install.sh` creates hides the package's, so run `./uninstall.sh` before switching to the package.
+Run that way, Postit won't appear in your application launcher — that entry comes with the package.
 
 ## First Launch
 

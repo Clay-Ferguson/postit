@@ -45,8 +45,6 @@ If it is missing, `./start.sh` fails immediately with an unresolved path depende
 
 ## Installing
 
-### As a Debian package
-
 ```bash
 ./build-deb-install.sh
 sudo apt install ./dist/postit_0.1.0_all.deb
@@ -64,19 +62,17 @@ PyQt6 and PyYAML aren't bundled. The package depends on the distribution's own `
 
 Building needs only `dpkg-deb`, which every Debian system has, and the `windowchrome` sibling checkout described above, whose source is copied into the package. The version comes from `pyproject.toml`. The package's Maintainer field comes from your `git config user.name` and `user.email`; override it with `POSTIT_MAINTAINER="Name <email>"`.
 
-Remove the package with `sudo apt remove postit`. Your notes and `~/.config/postit` are untouched.
+When installing from inside your home folder, `apt` may end with this notice:
 
-### From the source checkout
-
-```bash
-./install.sh
+```
+N: Download is performed unsandboxed as root as file '.../postit_0.1.0_all.deb' couldn't be accessed by user '_apt'. - pkgAcquire::Run (13: Permission denied)
 ```
 
-It asks nothing. It writes `~/.local/share/applications/postit.desktop` pointing at `start.sh` and `postit.png` in this folder; the notes folder and template are chosen in Settings the first time Postit runs.
+It's harmless, and the package still installs normally. `apt` usually reads package files as its unprivileged `_apt` user, and Ubuntu home folders are private by default, so `apt` read the file as root instead. To avoid the notice, copy the `.deb` somewhere world-readable first, such as `/tmp`, and install it from there.
 
-`./uninstall.sh` removes the desktop entry and leaves the config file where it is.
+Remove the package with `sudo apt remove postit`. Your notes and `~/.config/postit` are untouched.
 
-Use one install or the other. A desktop entry in `~/.local/share/applications` hides the package's, so run `./uninstall.sh` before switching to the `.deb`.
+The package is the only way to install Postit. To run it from this checkout instead — while working on it, say — use `./start.sh` directly; there is nothing to install for that.
 
 ## The dialog
 
@@ -140,8 +136,7 @@ Notes are named `note-YYYY-MM-DD--HH-MM-SS.md` — no slashes, spaces or colons,
 | `postit/__main__.py` | Entry point: the startup settings check, `QApplication`, error dialogs. |
 | `note-template.md` | The bundled template described above; the default offered in Settings. |
 | `start.sh` | Launcher; runs the app via `uv`. |
-| `install.sh` / `uninstall.sh` | Desktop entry management for running from the checkout. |
 | `build-deb-install.sh` | Builds the `.deb` into `dist/`. |
-| `postit.desktop` | Desktop entry template; `install.sh` rewrites `Exec=` and `Icon=`. |
+| `postit.desktop` | Desktop entry template; `build-deb-install.sh` rewrites `Exec=` and `Icon=`. |
 
 See [USER_GUIDE.md](/docs/USER_GUIDE.md) for a walkthrough aimed at using the app rather than working on it.

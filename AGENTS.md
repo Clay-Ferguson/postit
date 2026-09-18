@@ -6,7 +6,7 @@ Postit is a PyQt6 desktop app that does exactly one thing: pop a dialog with a t
 
 It's a rewrite of an older bash + zenity version (`../Postit--bash`), kept behavior-for-behavior identical except that the old version's desktop notification after saving was deliberately dropped.
 
-The notes folder and the note template are **settings, read from `~/.config/postit/postit-config.yaml`** (keys `notes_dir` and `template`). Nothing is passed on the command line and `install.sh` asks nothing. That is what lets a system-wide package (a `.deb`) install Postit without knowing anything about the user. At startup, if the file is missing or unparseable, or either path doesn't exist, the **Settings dialog opens before the note dialog**, and cancelling it exits the app. The note dialog also has a **Settings** button for changing either path later.
+The notes folder and the note template are **settings, read from `~/.config/postit/postit-config.yaml`** (keys `notes_dir` and `template`). Nothing is passed on the command line and installing asks nothing. That is what lets a system-wide package (a `.deb`) install Postit without knowing anything about the user. At startup, if the file is missing or unparseable, or either path doesn't exist, the **Settings dialog opens before the note dialog**, and cancelling it exits the app. The note dialog also has a **Settings** button for changing either path later.
 
 ## Architecture
 
