@@ -1,0 +1,12 @@
+# Template only. packaging/build-deb.sh rewrites Exec= and Icon= for where it is
+# installing to, so the path below is never used.
+[Desktop Entry]
+Name=Postit
+Comment=Rapidly create a timestamped markdown note
+Exec=/path/to/postit/start.sh
+Icon=postit
+Terminal=false
+Type=Application
+Categories=Utility;
+StartupNotify=false
+StartupWMClass=postit

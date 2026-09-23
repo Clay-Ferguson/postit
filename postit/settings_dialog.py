@@ -14,6 +14,7 @@ applies to that note with nothing to hand back.
 from __future__ import annotations
 
 import os
+from collections.abc import Callable
 from html import escape
 
 from PyQt6.QtWidgets import (
@@ -29,7 +30,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from . import UI_POINT_SIZE
+from . import APP_NAME, UI_POINT_SIZE
 from .config import (
     BUNDLED_TEMPLATE,
     CONFIG_PATH,
@@ -39,7 +40,7 @@ from .config import (
     problem,
     save_settings,
 )
-from .dialog import BUTTON_STYLE
+from .style import BUTTON_STYLE
 
 # Wide enough for a typical home-folder path without scrolling the field.
 MIN_WIDTH = 640
@@ -60,10 +61,7 @@ class SettingsDialog(QDialog):
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
-        # Just "Settings": the application display name is set, and Qt appends
-        # it to every window title, so this reaches the title bar as
-        # "Settings — Postit".
-        self.setWindowTitle("Settings")
+        self.setWindowTitle(f"Settings — {APP_NAME}")
         self.setMinimumWidth(MIN_WIDTH)
         # Set on the dialog so every label and field inherits it; the buttons
         # get the same size through BUTTON_STYLE, as in the note dialog.
@@ -120,7 +118,9 @@ class SettingsDialog(QDialog):
 
     # -- construction ------------------------------------------------------
 
-    def _add_path_row(self, label: str, value: str, browse) -> QLineEdit:
+    def _add_path_row(
+        self, label: str, value: str, browse: Callable[[], None]
+    ) -> QLineEdit:
         """A caption, then a path field with a Browse… button beside it."""
         if self._layout.count():
             self._layout.addSpacing(SECTION_SPACING - LABEL_SPACING)
@@ -196,7 +196,7 @@ class SettingsDialog(QDialog):
             save_settings(settings)
         except OSError as exc:
             QMessageBox.warning(
-                self, "Could not save settings", f"{CONFIG_PATH}\n\n{exc}"
+                self, f"{APP_NAME} — could not save settings", f"{CONFIG_PATH}\n\n{exc}"
             )
             return
         self._saved = settings

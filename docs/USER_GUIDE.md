@@ -16,7 +16,7 @@ The easiest way is the Debian package. If you have a `postit_…_all.deb` file, 
 sudo apt install ./postit_0.1.0_all.deb
 ```
 
-`apt` fetches everything Postit needs along with it. To build the package yourself, run `./build-deb-install.sh` in the Postit folder; the file lands in `dist/`.
+`apt` fetches everything Postit needs along with it. To build the package yourself, run `packaging/build-deb.sh` in the Postit folder; the file lands in `dist/`.
 
 Afterwards, "Postit" appears in your application launcher. Search for it in Activities, then right-click the icon and pin it to your dock — the whole point of the app is being one click away.
 
@@ -123,7 +123,7 @@ The filename uses `2026-08-21` because it sorts correctly. The `due:` and `start
 
 ## Customizing the Template
 
-Every note is built from the template file chosen in Settings. Postit comes with one, `note-template.md`, which looks like this. It's in `/usr/lib/postit/` if you installed the package, or in the Postit folder if you run from source.
+Every note is built from the template file chosen in Settings. Postit comes with one, `note-template.md`, which looks like this. It's in `/usr/lib/postit/postit/data/` if you installed the package, or in `postit/data/` inside the Postit folder if you run from source.
 
 ```markdown
 ---
@@ -162,5 +162,6 @@ Postit tells you with an error dialog rather than failing silently. The things t
 - **The notes folder or template no longer exists** — it was moved, renamed or deleted while the note box was open. The note you'd typed is not recovered, so re-type it. The next time you launch, Postit opens Settings so you can choose again.
 - **A permissions error** — Postit couldn't write into the notes folder. Click **Settings** and choose a folder you own.
 - **"Could not save settings"** (from the Settings window) — Postit couldn't write `~/.config/postit/postit-config.yaml`. The window stays open so nothing you entered is lost; check that the `.config` folder in your home folder is writable.
+- **"Postit — internal error"** — a bug in Postit itself. The note box stays open with your text in it, so you can still save it; the details in the message are what to include if you report the bug.
 
 In every case nothing was written, so there's no half-saved file to clean up.

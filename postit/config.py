@@ -2,7 +2,7 @@
 
 Deliberately Qt-free, like `note.py`: loading, saving and validating the
 settings are plain Python, so they can be exercised without a display.
-`settings.py` is the dialog that edits them, `__main__.py` the startup check.
+`settings_dialog.py` is the dialog that edits them, `__main__.py` the startup check.
 
 One YAML file at `CONFIG_PATH` holds both settings. `Settings` is that file as
 a record; `load_settings()` and `save_settings()` are the whole of what the
@@ -13,17 +13,22 @@ write a note with", shared by the startup check and the dialog's Save button.
 from __future__ import annotations
 
 import os
+import tempfile
 from typing import NamedTuple
 
 import yaml
 
 CONFIG_PATH = os.path.expanduser("~/.config/postit/postit-config.yaml")
 
-# The program's own folder, and the template shipped in it. That template is
-# only ever a suggestion: the Settings dialog fills it into an empty template
-# field, so a first run needs nothing chosen but the notes folder.
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-BUNDLED_TEMPLATE = os.path.join(PROJECT_ROOT, "note-template.md")
+# Files the program reads at run time, kept inside the package so they travel
+# with it — the same place in a checkout and under /usr/lib/postit, with
+# nothing for the .deb to copy separately.
+DATA_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), "data")
+
+# The template shipped with the program. It is only ever a suggestion: the
+# Settings dialog fills it into an empty template field, so a first run needs
+# nothing chosen but the notes folder.
+BUNDLED_TEMPLATE = os.path.join(DATA_DIR, "note-template.md")
 
 HEADER = "# Postit configuration. Edit here or from the Settings button.\n"
 
@@ -77,9 +82,16 @@ def load_settings() -> tuple[Settings, str | None]:
 def save_settings(settings: Settings) -> None:
     """Write `settings` to `CONFIG_PATH`, replacing whatever was there.
 
+    Atomic: the new contents go to a temporary file beside the config, which
+    then replaces it, so a failed write leaves the old file whole rather than
+    truncated. A config that is a symlink (into a dotfiles repo, say) is
+    followed, so the link survives and its target is what gets replaced.
+
     Raises OSError if the directory can't be created or the file written.
     """
-    os.makedirs(os.path.dirname(CONFIG_PATH), exist_ok=True)
+    target = os.path.realpath(CONFIG_PATH)
+    directory = os.path.dirname(target)
+    os.makedirs(directory, exist_ok=True)
     # safe_dump rather than an f-string, so a path containing a colon, a quote
     # or a leading `~` is quoted the way YAML needs it to be.
     body = yaml.safe_dump(
@@ -87,8 +99,17 @@ def save_settings(settings: Settings) -> None:
         sort_keys=False,
         allow_unicode=True,
     )
-    with open(CONFIG_PATH, "w", encoding="utf-8") as handle:
-        handle.write(HEADER + body)
+    fd, temp = tempfile.mkstemp(dir=directory, prefix=".postit-config-", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(HEADER + body)
+        os.replace(temp, target)
+    except BaseException:
+        try:
+            os.unlink(temp)
+        except OSError:
+            pass
+        raise
 
 
 def problem(settings: Settings) -> str | None:

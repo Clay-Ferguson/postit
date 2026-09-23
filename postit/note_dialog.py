@@ -1,15 +1,14 @@
 """The note dialog: a text area, with Settings, Save and Cancel below it.
 
-The styling helpers live here rather than in a module of their own. The Settings
-dialog borrows `BUTTON_STYLE` from this module, which is not enough sharing to
-justify a `style.py`.
+The window decoration draws its own frame around the whole window, so the
+dialog adds no border of its own — the content sits directly on the QDialog
+with one level of padding, nothing more.
 """
 
 from __future__ import annotations
 
-from PyQt6.QtGui import QColor, QFontDatabase, QPalette
+from PyQt6.QtGui import QFontDatabase
 from PyQt6.QtWidgets import (
-    QApplication,
     QDialog,
     QDialogButtonBox,
     QHBoxLayout,
@@ -20,58 +19,18 @@ from PyQt6.QtWidgets import (
 )
 from windowchrome import apply_scrollbars
 
-from . import APP_NAME, NOTE_POINT_SIZE, UI_POINT_SIZE
+from . import APP_NAME
 from .config import load_settings
+from .settings_dialog import SettingsDialog
+from .style import BUTTON_STYLE, field_background, field_border
 
-# The window decoration draws its own frame around the whole window, so the
-# dialog adds no border of its own — the content sits directly on the QDialog
-# with one level of padding, nothing more.
-BUTTON_STYLE = f"QPushButton {{ font-size: {UI_POINT_SIZE}pt; padding: 8px 20px; }}"
+# The note is set larger than the UI around it, and in the desktop's fixed-width
+# face. Monospace faces read a shade smaller than a proportional one at the same
+# point size, so the gap above `UI_POINT_SIZE` is partly making that back.
+NOTE_POINT_SIZE = 16
 
 DIALOG_WIDTH = 700
 DIALOG_HEIGHT = 500
-
-
-def field_background() -> QColor:
-    """A background a shade lighter than the theme's default input color.
-
-    Computed from the live application palette (rather than a fixed hex) so it
-    lightens relative to whatever the desktop theme's own input background is,
-    instead of assuming a light or a dark theme. Queried lazily — at dialog-build
-    time, not import time — since no theme is attached to the palette until
-    QApplication exists.
-
-    Returned as a QColor rather than a hex string because most of what wants
-    it wants the color: `field_border()` derives from it and `apply_scrollbars`
-    is handed it. Only the stylesheet needs `.name()`.
-    """
-    base = QApplication.palette().color(QPalette.ColorRole.Base)
-    return base.lighter(130)
-
-
-def field_border() -> str:
-    """A border that contrasts with the field's own background, whichever way
-    that has to go. Setting any QSS on a widget (as the dialog does, to paint
-    the field with `field_background()`) opts it out of the style's native
-    border too, so this is drawn explicitly rather than left to the theme.
-
-    Lightening is tried first, to match the lightened background — but both
-    `lighter()` and `darker()` work in HSV, by scaling the value component,
-    so each is a no-op at the end of the scale it is heading toward. On a
-    light theme the Base color is already white and lightening returns white
-    again, leaving an outline indistinguishable from the field it is supposed
-    to outline; darkening covers that case. On a pure black Base (some
-    high-contrast and OLED themes) the value component is zero and *neither*
-    direction moves, so the last resort is a fixed gray.
-    """
-    background = field_background()
-    lightened = background.lighter(140)
-    if lightened != background:
-        return lightened.name()
-    darkened = background.darker(115)
-    if darkened != background:
-        return darkened.name()
-    return "#2e2e2e"
 
 
 class NoteDialog(QDialog):
@@ -156,10 +115,6 @@ class NoteDialog(QDialog):
         to go back to. Nothing is handed back either way: `__main__` reads the
         config again when the note is saved.
         """
-        # Imported here, not at the top: settings.py takes BUTTON_STYLE from
-        # this module, so a top-level import would be circular.
-        from .settings import SettingsDialog
-
         settings, error = load_settings()
         SettingsDialog(settings, error, parent=self).exec()
         self._text_edit.setFocus()

@@ -9,17 +9,23 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+import traceback
 
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication, QDialog, QMessageBox
 
 from . import APP_NAME
-from .config import CONFIG_PATH, PROJECT_ROOT, Settings, load_settings, problem
-from .dialog import NoteDialog
+from .config import CONFIG_PATH, DATA_DIR, Settings, load_settings, problem
 from .note import TemplateNotFound, write_note
-from .settings import SettingsDialog
+from .note_dialog import NoteDialog
+from .settings_dialog import SettingsDialog
 
-ICON = os.path.join(PROJECT_ROOT, "postit.png")
+# The window's own icon. An installed copy also gets its dock icon from the
+# themed icons the .deb installs; a checkout run has only this.
+ICON = os.path.join(DATA_DIR, "postit.png")
+
+# How much of a traceback the internal-error dialog shows.
+TRACEBACK_LINES = 12
 
 
 def ensure_settings() -> Settings | None:
@@ -44,6 +50,41 @@ def ensure_settings() -> Settings | None:
     return dialog.settings()
 
 
+def _report_unhandled(kind, value, trace) -> None:
+    """Show an exception that escaped a slot, instead of dying of it.
+
+    PyQt6 aborts the whole process when a Python exception leaves a slot and
+    no `sys.excepthook` has been installed — a bug behind the Settings or a
+    Browse… button would close Postit outright and take the typed note with
+    it, with nothing to show for it when launched from a desktop icon. With a
+    hook installed PyQt calls it instead and carries on, so the bug is
+    reported and the note is still there to save.
+    """
+    text = "".join(traceback.format_exception(kind, value, trace))
+    if sys.__stderr__ is not None:
+        sys.__stderr__.write(text)
+    if QApplication.instance() is None:
+        return
+    # The tail of the traceback, where the failing line is: a desktop launch
+    # has no terminal for the stderr copy above to reach.
+    tail = "\n".join(text.rstrip().splitlines()[-TRACEBACK_LINES:])
+    QMessageBox.critical(
+        None,
+        f"{APP_NAME} — internal error",
+        f"Something went wrong inside {APP_NAME}. The note should still be "
+        f"there to save.\n\n{tail}",
+    )
+
+
+def _save_failed(message: str) -> int:
+    """Report a note that could not be written, and the exit status for it."""
+    # The dialog is gone by now, so a bare stderr message would vanish with it
+    # when launched from the icon; report it where it can be seen.
+    QMessageBox.critical(None, f"{APP_NAME} — could not save", message)
+    print(f"Error: {message}", file=sys.stderr)
+    return 1
+
+
 def main() -> int:
     # No arguments any more, but argparse stays so --help says what Postit is,
     # and so a stale launcher that still passes a notes folder fails loudly
@@ -52,8 +93,14 @@ def main() -> int:
     parser.parse_args()
 
     app = QApplication(sys.argv)
+    sys.excepthook = _report_unhandled
     app.setApplicationName(APP_NAME)
-    app.setApplicationDisplayName(APP_NAME)
+    # applicationDisplayName is deliberately NOT set. Every platform backend
+    # runs window titles through QPlatformWindow::formatWindowTitle(), which
+    # appends the display name to any title that isn't exactly it — so with
+    # it set, "Postit — could not save" reached the title bar as
+    # "Postit — could not save — Postit". Each window spells out its own full
+    # title instead.
     # Ties the window to postit.desktop, so the desktop shows our icon in the
     # dock and alt-tab instead of a generic one. Without it the Wayland app_id
     # is derived from argv[0] ("python3") and matches nothing.
@@ -78,16 +125,12 @@ def main() -> int:
     # Settings button may have changed either path while the note was typed.
     settings, error = load_settings()
     issue = error or problem(settings)
+    if issue:
+        return _save_failed(f"{CONFIG_PATH}\n\n{issue}")
     try:
-        if issue:
-            raise OSError(f"{CONFIG_PATH}\n\n{issue}")
         path = write_note(settings.notes_dir, settings.template, dialog.text())
     except (TemplateNotFound, OSError) as exc:
-        # The dialog is gone by now, so a bare stderr traceback would vanish
-        # with it when launched from the icon; report it where it can be seen.
-        QMessageBox.critical(None, f"{APP_NAME} - could not save", str(exc))
-        print(f"Error: {exc}", file=sys.stderr)
-        return 1
+        return _save_failed(str(exc))
 
     print(f"Note saved to: {path}")
     return 0

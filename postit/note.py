@@ -2,13 +2,15 @@
 
 Deliberately Qt-free: everything here is plain Python, so the filename,
 template and timestamp rules can be exercised without a display attached.
-`dialog.py` handles the GUI, `__main__.py` wires the two together.
+`note_dialog.py` handles the GUI, `__main__.py` wires the two together.
 """
 
 from __future__ import annotations
 
 import datetime as dt
+import itertools
 import os
+from collections.abc import Iterator
 
 # The filename timestamp is sortable and shell-friendly: no slashes, no spaces,
 # no colons. The date and time written *into* the note are a different, more
@@ -65,25 +67,18 @@ def read_template(template_path: str) -> str:
         raise TemplateNotFound(f"Template not found: {template_path}\n\n{exc}") from exc
 
 
-def unique_path(notes_dir: str, when: dt.datetime) -> str:
-    """A not-yet-taken path for a note stamped `when`.
+def candidate_paths(notes_dir: str, when: dt.datetime) -> Iterator[str]:
+    """Paths for a note stamped `when`, in the order they should be tried.
 
     The timestamp is only second-resolution, so two notes saved in the same
     second would collide. Rather than overwrite the first one, the second
     becomes `note-<stamp>-2.md`, the third `-3`, and so on.
     """
     base = when.strftime(FILENAME_FORMAT)
-    path = os.path.join(notes_dir, base)
-    if not os.path.exists(path):
-        return path
-
+    yield os.path.join(notes_dir, base)
     stem, ext = os.path.splitext(base)
-    suffix = 2
-    while True:
-        path = os.path.join(notes_dir, f"{stem}-{suffix}{ext}")
-        if not os.path.exists(path):
-            return path
-        suffix += 1
+    for suffix in itertools.count(2):
+        yield os.path.join(notes_dir, f"{stem}-{suffix}{ext}")
 
 
 def write_note(
@@ -91,18 +86,24 @@ def write_note(
 ) -> str:
     """Render `content` into the template and save it. Returns the path written.
 
-    Raises TemplateNotFound if the template is missing, or OSError if the notes
-    directory can't be created or the file can't be written.
+    The notes folder must already exist; it is never created here (see
+    `config.problem()`). Each candidate name is opened in exclusive-create mode,
+    so checking that a name is free and taking it are one step, and a note can
+    never land on top of another, even one written in the same instant.
+
+    Raises TemplateNotFound if the template is missing, or OSError if the file
+    can't be written.
     """
     when = when or dt.datetime.now()
-    template = read_template(template_path)
-
-    os.makedirs(notes_dir, exist_ok=True)
-    path = unique_path(notes_dir, when)
-
-    body = render(template, content, when)
+    body = render(read_template(template_path), content, when)
     if not body.endswith("\n"):
         body += "\n"
-    with open(path, "w", encoding="utf-8") as handle:
-        handle.write(body)
-    return path
+
+    for path in candidate_paths(notes_dir, when):
+        try:
+            with open(path, "x", encoding="utf-8") as handle:
+                handle.write(body)
+        except FileExistsError:
+            continue
+        return path
+    raise AssertionError("unreachable: candidate_paths() never ends")

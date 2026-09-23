@@ -17,7 +17,7 @@ The first time it runs, Postit opens its **Settings** dialog before anything els
 ```yaml
 # Postit configuration. Edit here or from the Settings button.
 notes_dir: /home/you/Documents/notes
-template: /home/you/Postit/note-template.md
+template: /home/you/Postit/postit/data/note-template.md
 ```
 
 Settings comes back on its own whenever the configuration stops being usable: the folder was moved, the template deleted, or the file edited into something that isn't valid YAML. Cancel it and Postit exits without opening the note dialog; run it again to retry.
@@ -46,21 +46,22 @@ If it is missing, `./start.sh` fails immediately with an unresolved path depende
 ## Installing
 
 ```bash
-./build-deb-install.sh
+packaging/build-deb.sh
 sudo apt install ./dist/postit_0.1.0_all.deb
 ```
 
-`build-deb-install.sh` builds `dist/postit_<version>_all.deb`, which any Debian-based distribution can install if its repositories carry `python3-pyqt6` and Python 3.11 or newer. It installs:
+`packaging/build-deb.sh` builds `dist/postit_<version>_all.deb`, which any Debian-based distribution can install if its repositories carry `python3-pyqt6` and Python 3.11 or newer. It installs:
 
 | Path | What it is |
 |---|---|
 | `/usr/bin/postit` | The launcher. |
-| `/usr/lib/postit/` | The `postit` package, a copy of `windowchrome`, `note-template.md` and `postit.png`. |
+| `/usr/lib/postit/` | The `postit` package (including its `data/`: the bundled template and window icon) and a copy of `windowchrome`. |
 | `/usr/share/applications/postit.desktop` | The application-menu entry. |
+| `/usr/share/icons/hicolor/*/apps/postit.png` | The menu and dock icon, at every size. |
 
 PyQt6 and PyYAML aren't bundled. The package depends on the distribution's own `python3-pyqt6` and `python3-yaml`, which `apt` installs along with it, and `uv` isn't needed at all.
 
-Building needs only `dpkg-deb`, which every Debian system has, and the `windowchrome` sibling checkout described above, whose source is copied into the package. The version comes from `pyproject.toml`. The package's Maintainer field comes from your `git config user.name` and `user.email`; override it with `POSTIT_MAINTAINER="Name <email>"`.
+Building needs only `dpkg-deb`, which every Debian system has, and the `windowchrome` sibling checkout described above, whose source is copied into the package. Before packing, the script smoke-tests the staged files: every import between modules resolves to a file that was copied, the data files are present, the bundled template renders, and the modules import (only the Qt-free ones if the build machine's `python3` has no PyQt6), so a file the copy missed fails the build rather than the first launch. The version comes from `pyproject.toml`. The package's Maintainer field comes from your `git config user.name` and `user.email`; override it with `POSTIT_MAINTAINER="Name <email>"`.
 
 When installing from inside your home folder, `apt` may end with this notice:
 
@@ -125,18 +126,31 @@ To change the frontmatter — different tags, extra fields, no frontmatter at al
 
 Notes are named `note-YYYY-MM-DD--HH-MM-SS.md` — no slashes, spaces or colons, so they sort chronologically and are painless to type at a shell. If two notes land inside the same second, the second one gets a `-2` suffix (`note-2026-08-21--13-05-07-2.md`) rather than overwriting the first.
 
+## Development
+
+```bash
+./start.sh     # run from the checkout
+./lint.sh      # ruff, pyright and a syntax check of the shell scripts
+```
+
+There is deliberately no automated test suite; `./lint.sh` must stay clean. `ruff` and `pyright` are fetched by `uv` on demand, and their settings live in `ruff.toml` and `pyrightconfig.json` so that `pyproject.toml` stays the list of runtime dependencies.
+
 ## Layout
 
 | Path | What it is |
 |---|---|
+| `postit/__main__.py` | Entry point: the startup settings check, `QApplication`, error dialogs. |
 | `postit/note.py` | Timestamps, template rendering, the file write. No Qt — runs headless. |
 | `postit/config.py` | The config file: load, save, and the one validity rule. No Qt — runs headless. |
-| `postit/dialog.py` | `NoteDialog` and its theme-derived styling. |
-| `postit/settings.py` | `SettingsDialog`: the notes folder and template, with Browse… buttons. |
-| `postit/__main__.py` | Entry point: the startup settings check, `QApplication`, error dialogs. |
-| `note-template.md` | The bundled template described above; the default offered in Settings. |
+| `postit/note_dialog.py` | `NoteDialog`: the text area and its buttons. |
+| `postit/settings_dialog.py` | `SettingsDialog`: the notes folder and template, with Browse… buttons. |
+| `postit/style.py` | The shared look: button style and the theme-derived field colors. |
+| `postit/data/` | `note-template.md` (the bundled template described above) and `postit.png` (the window icon). |
+| `packaging/build-deb.sh` | Builds the `.deb` into `dist/`. |
+| `packaging/postit.desktop` | Desktop entry template; `build-deb.sh` rewrites `Exec=` and `Icon=`. |
+| `packaging/icons/` | `source.png` (the artwork), the generated hicolor PNGs, and `make-icons.py`, which regenerates them: `uv run --no-project --with pillow packaging/icons/make-icons.py`. |
+| `docs/` | The User Guide and its screenshot. Not shipped in the package. |
 | `start.sh` | Launcher; runs the app via `uv`. |
-| `build-deb-install.sh` | Builds the `.deb` into `dist/`. |
-| `postit.desktop` | Desktop entry template; `build-deb-install.sh` rewrites `Exec=` and `Icon=`. |
+| `lint.sh` | Static checks. |
 
 See [USER_GUIDE.md](/docs/USER_GUIDE.md) for a walkthrough aimed at using the app rather than working on it.
