@@ -25,16 +25,20 @@ CONFIG_PATH = os.path.expanduser("~/.config/postit/postit-config.yaml")
 # nothing for the .deb to copy separately.
 DATA_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), "data")
 
-# The template shipped with the program. It is only ever a suggestion: the
-# Settings dialog fills it into an empty template field, so a first run needs
-# nothing chosen but the notes folder.
+# The template shipped with the program. It is only ever a suggestion — where
+# the template chooser opens when the field is empty — and never used unless
+# chosen: an empty template field means the note is saved as typed.
 BUNDLED_TEMPLATE = os.path.join(DATA_DIR, "note-template.md")
 
 HEADER = "# Postit configuration. Edit here or from the Settings button.\n"
 
 
 class Settings(NamedTuple):
-    """Both settings, as absolute paths. An empty string means "not set"."""
+    """Both settings, as absolute paths. An empty string means "not set".
+
+    The notes folder is required; the template is optional, and when it is not
+    set a note is saved as just the text typed.
+    """
 
     notes_dir: str = ""
     template: str = ""
@@ -115,16 +119,16 @@ def save_settings(settings: Settings) -> None:
 def problem(settings: Settings) -> str | None:
     """The first thing stopping `settings` from being used, or None if nothing.
 
-    Both must exist already: the folder picker can create a folder, so there
-    is no need to guess at creating one from a typo.
+    The notes folder is required and must exist already: the folder picker can
+    create a folder, so there is no need to guess at creating one from a typo.
+    The template is optional, but one that *is* set must exist — a template
+    the user chose is never silently dropped because it went missing.
     """
     if not settings.notes_dir:
         return "Choose a folder to save notes into."
     if not os.path.isdir(settings.notes_dir):
         return "The notes folder does not exist."
-    if not settings.template:
-        return "Choose a template file."
-    if not os.path.isfile(settings.template):
+    if settings.template and not os.path.isfile(settings.template):
         return "The template file does not exist."
     return None
 

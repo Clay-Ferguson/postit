@@ -1,4 +1,4 @@
-"""The Settings dialog: the notes folder and the note template.
+"""The Settings dialog: the notes folder and the (optional) note template.
 
 Two path fields, each with a Browse… button that opens the desktop's own
 chooser. Save stays disabled until `config.problem()` has nothing to say about
@@ -87,16 +87,16 @@ class SettingsDialog(QDialog):
             warning.setWordWrap(True)
             self._layout.addWidget(warning)
 
-        template = settings.template
-        if not template and os.path.isfile(BUNDLED_TEMPLATE):
-            template = BUNDLED_TEMPLATE
-
         self._folder_edit = self._add_path_row(
             "Notes folder:", settings.notes_dir, self._browse_folder
         )
+        # Left empty when unset, not filled with the bundled template: empty is
+        # a real choice (save the note as typed), and filling it in would undo
+        # that choice every time the dialog opened.
         self._template_edit = self._add_path_row(
-            "Note template:", template, self._browse_template
+            "Note template (optional):", settings.template, self._browse_template
         )
+        self._template_edit.setPlaceholderText("None — notes are saved as typed")
 
         self._layout.addSpacing(SECTION_SPACING - LABEL_SPACING)
         self._hint = QLabel()
@@ -174,9 +174,15 @@ class SettingsDialog(QDialog):
 
     def _browse_template(self) -> None:
         current = normalize(self._template_edit.text())
-        # Starting at the file itself preselects it; otherwise the nearest
+        # Starting at the file itself preselects it; an empty field starts at
+        # the bundled template, the usual first choice; otherwise the nearest
         # folder that still exists.
-        start = current if os.path.isfile(current) else nearest_existing_dir(current)
+        if not current and os.path.isfile(BUNDLED_TEMPLATE):
+            start = BUNDLED_TEMPLATE
+        elif os.path.isfile(current):
+            start = current
+        else:
+            start = nearest_existing_dir(current)
         chosen, _ = QFileDialog.getOpenFileName(
             self, "Note template", start, "Markdown (*.md);;All files (*)"
         )

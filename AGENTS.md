@@ -6,7 +6,7 @@ Postit is a PyQt6 desktop app that does exactly one thing: pop a dialog with a t
 
 It's a rewrite of an older bash + zenity version (`../Postit--bash`), kept behavior-for-behavior identical except that the old version's desktop notification after saving was deliberately dropped.
 
-The notes folder and the note template are **settings, read from `~/.config/postit/postit-config.yaml`** (keys `notes_dir` and `template`). Nothing is passed on the command line and installing asks nothing. That is what lets a system-wide package (a `.deb`) install Postit without knowing anything about the user. At startup, if the file is missing or unparseable, or either path doesn't exist, the **Settings dialog opens before the note dialog**, and cancelling it exits the app. The note dialog also has a **Settings** button for changing either path later.
+The notes folder and the (optional) note template are **settings, read from `~/.config/postit/postit-config.yaml`** (keys `notes_dir` and `template`). Nothing is passed on the command line and installing asks nothing. That is what lets a system-wide package (a `.deb`) install Postit without knowing anything about the user. The template may be left empty, in which case a note is saved as exactly the text typed. At startup, if the file is missing or unparseable, the notes folder is unset or doesn't exist, or a template is set but doesn't exist, the **Settings dialog opens before the note dialog**, and cancelling it exits the app. The note dialog also has a **Settings** button for changing either path later.
 
 The modules are heavily commented, and the comments record *why*. Read the comments at a site before "simplifying" it. See `README.md` for the template reference and `docs/USER_GUIDE.md` for end-user documentation.
 
@@ -21,18 +21,18 @@ The modules are heavily commented, and the comments record *why*. Read the comme
 
 ## Layout
 
-Top level: `postit/` (the app), `docs/` (the User Guide and its screenshot; not shipped), `packaging/` (`build-deb.sh`, the `.desktop` template, and `icons/` with `source.png`, `make-icons.py` and the generated hicolor PNGs), `start.sh` and `lint.sh`. Tool settings live in `ruff.toml` and `pyrightconfig.json`, so `pyproject.toml` stays the runtime dependency list. The package, split so that everything testable is free of Qt:
+Top level: `postit/` (the app), `docs/` (the User Guide and its screenshot; not shipped), `packaging/` (`build-deb.sh`, the `.desktop` template, and `icons/` with `source.png`, `make-icons.py` and the generated hicolor PNGs), `start.sh`, `lint.sh` and `build.sh` (runs `packaging/build-deb.sh`, then offers to install the result). Tool settings live in `ruff.toml` and `pyrightconfig.json`, so `pyproject.toml` stays the runtime dependency list. The package, split so that everything testable is free of Qt:
 
 - `__init__.py` — `APP_NAME` and `UI_POINT_SIZE`, the size of the buttons and the Settings dialog's labels and fields.
 - `note.py` — **the model, no Qt imports.** Timestamp formatting, template rendering, and the file write. Two details worth not "simplifying":
   - `format_date`/`format_time` build their strings by hand instead of using strftime's `%-m`/`%-I`, which are a glibc extension. The formats (`8/21/2026`, `1:05 PM`) are what the Timex Extension reads, and are deliberately different from the sortable filename timestamp.
-  - `write_note` walks `candidate_paths()` (the stamped name, then `-2`, `-3`, …) and opens each in exclusive-create (`"x"`) mode, so a note is never silently overwritten — not even by one written in the same instant. It does **not** create the notes folder; see "Deliberate behavior".
+  - `write_note` walks `candidate_paths()` (the stamped name, then `-2`, `-3`, …) and opens each in exclusive-create (`"x"`) mode, so a note is never silently overwritten — not even by one written in the same instant. An empty template path means no template (the note is just the content). It does **not** create the notes folder; see "Deliberate behavior".
 - `config.py` — **the settings, no Qt imports.** The same YAML-config approach as the sibling `sonar` project. Its pieces:
-  - `Settings` (two absolute paths; `""` means not set).
+  - `Settings` (two absolute paths; `""` means not set, which is valid for `template`).
   - `load_settings()`, which returns the settings plus an error message instead of raising. A missing file is no error; an unreadable or malformed one is, because the Settings dialog opened over it will replace the file on Save and needs to say so.
   - `save_settings()`, atomic (temp file + `os.replace`, symlinks followed), so a failed write leaves the old file whole.
-  - `problem()`: the **single validity rule** (the folder is an existing directory, the template an existing file), shared by the startup check and the dialog's Save button. Don't let the two drift apart.
-  - `DATA_DIR` (`postit/data/`) and `BUNDLED_TEMPLATE`, the shipped `data/note-template.md`. The template is only filled into an *empty* template field as a starting point, and never used silently.
+  - `problem()`: the **single validity rule** (the folder is an existing directory; the template is empty or an existing file), shared by the startup check and the dialog's Save button. Don't let the two drift apart.
+  - `DATA_DIR` (`postit/data/`) and `BUNDLED_TEMPLATE`, the shipped `data/note-template.md`. It is only where the template chooser starts when the field is empty, and never used unless chosen — the dialog does not pre-fill it, because empty is a real choice.
 - `style.py` — the shared look: `BUTTON_STYLE`, `field_background()`, `field_border()`. Imports nothing from the package except `UI_POINT_SIZE`, so either dialog can use it without importing the other.
   - `field_background()` and `field_border()` derive their colors from the live `QPalette` at build time — not import time, since no theme is attached until `QApplication` exists — so they track light and dark desktop themes. `field_border()` lightens by default but **darkens** when lightening does nothing, which is the case on a light theme where `Base` is already white and `lighter()` saturates.
 - `note_dialog.py` — `NoteDialog`.
@@ -64,7 +64,7 @@ Top level: `postit/` (the app), `docs/` (the User Guide and its screenshot; not 
 - **No desktop notification** on save. The bash version had one; it was explicitly removed in this rewrite.
 - Save is disabled while the text is blank or whitespace-only, mirroring the bash version's `[ -n "$NOTE_CONTENT" ]` check.
 - **Cancel in the Settings dialog means two different things.** At startup it exits the app (the user reruns Postit to try again). From the note dialog's Settings button it only closes Settings and returns to the note.
-- **Settings' Save requires both paths to already exist, and the notes folder is never created on demand** — not by Settings, not by `write_note`. The folder picker can create one.
+- **Settings' Save requires the notes folder (and the template, if one is entered) to already exist, and the notes folder is never created on demand** — not by Settings, not by `write_note`. The folder picker can create one.
 - **No command-line notes folder.** The config file is the only source of truth, so there is never a question of which folder is in effect.
 
 ## Working in this repo

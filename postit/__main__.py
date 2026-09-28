@@ -33,8 +33,9 @@ def ensure_settings() -> Settings | None:
 
     Valid saved settings are used as they are. Anything else opens the Settings
     dialog before the note dialog, so nobody types a note that has nowhere to
-    go. That covers a first run, a folder or template that has since
-    disappeared, and a config file that won't parse. Cancelling that dialog is
+    go. That covers a first run, a folder (or a chosen template) that has since
+    disappeared, and a config file that won't parse. An unset template is
+    fine and doesn't open it. Cancelling that dialog is
     how the user declines, and the app exits rather than asking again.
     """
     settings, error = load_settings()

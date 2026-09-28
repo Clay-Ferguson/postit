@@ -86,6 +86,8 @@ def write_note(
 ) -> str:
     """Render `content` into the template and save it. Returns the path written.
 
+    An empty `template_path` means no template: the note is just `content`.
+
     The notes folder must already exist; it is never created here (see
     `config.problem()`). Each candidate name is opened in exclusive-create mode,
     so checking that a name is free and taking it are one step, and a note can
@@ -95,7 +97,8 @@ def write_note(
     can't be written.
     """
     when = when or dt.datetime.now()
-    body = render(read_template(template_path), content, when)
+    template = read_template(template_path) if template_path else CONTENT_PLACEHOLDER
+    body = render(template, content, when)
     if not body.endswith("\n"):
         body += "\n"
 

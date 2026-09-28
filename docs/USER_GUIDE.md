@@ -16,7 +16,7 @@ The easiest way is the Debian package. If you have a `postit_…_all.deb` file, 
 sudo apt install ./postit_0.1.0_all.deb
 ```
 
-`apt` fetches everything Postit needs along with it. To build the package yourself, run `packaging/build-deb.sh` in the Postit folder; the file lands in `dist/`.
+`apt` fetches everything Postit needs along with it. To build the package yourself, run `./build.sh` in the Postit folder; the file lands in `dist/`, and the script offers to install it for you.
 
 Afterwards, "Postit" appears in your application launcher. Search for it in Activities, then right-click the icon and pin it to your dock — the whole point of the app is being one click away.
 
@@ -40,12 +40,12 @@ Run that way, Postit won't appear in your application launcher — that entry co
 
 ## First Launch
 
-The first time you open Postit, it shows its **Settings** window instead of the note box, because it needs to know two things:
+The first time you open Postit, it shows its **Settings** window instead of the note box, because it needs to know where your notes go:
 
 1. **Notes folder** — where your notes go. Click **Browse…** to pick one. The folder chooser has a button for creating a new folder, if you want a fresh one.
-2. **Note template** — the file each note is built from. It's already filled in with the template that comes with Postit, so you can leave it alone for now (see [Customizing the Template](#customizing-the-template)).
+2. **Note template** *(optional)* — a file each note is built from. Leave it empty and each note holds just what you typed. To use the template that comes with Postit, click **Browse…**; the chooser opens right on it (see [Customizing the Template](#customizing-the-template)).
 
-**Save** stays greyed out until both fields point at something that exists, and a line under the fields tells you what's still missing. Click **Save** and the note box opens, ready for your first note.
+**Save** stays greyed out until the notes folder exists (and the template, if you entered one), and a line under the fields tells you what's still missing. Click **Save** and the note box opens, ready for your first note.
 
 Postit won't ask again unless one of those stops working. If you later move or delete your notes folder, for example, Settings reappears the next time you launch.
 
@@ -123,7 +123,7 @@ The filename uses `2026-08-21` because it sorts correctly. The `due:` and `start
 
 ## Customizing the Template
 
-Every note is built from the template file chosen in Settings. Postit comes with one, `note-template.md`, which looks like this. It's in `/usr/lib/postit/postit/data/` if you installed the package, or in `postit/data/` inside the Postit folder if you run from source.
+If you choose a template file in Settings, every note is built from it; without one, a note is just what you typed. Postit comes with one, `note-template.md`, which looks like this. It's in `/usr/lib/postit/postit/data/` if you installed the package, or in `postit/data/` inside the Postit folder if you run from source.
 
 ```markdown
 ---
@@ -159,7 +159,7 @@ A couple of things worth knowing:
 
 Postit tells you with an error dialog rather than failing silently. The things that can go wrong:
 
-- **The notes folder or template no longer exists** — it was moved, renamed or deleted while the note box was open. The note you'd typed is not recovered, so re-type it. The next time you launch, Postit opens Settings so you can choose again.
+- **The notes folder or chosen template no longer exists** — it was moved, renamed or deleted while the note box was open. The note you'd typed is not recovered, so re-type it. The next time you launch, Postit opens Settings so you can choose again.
 - **A permissions error** — Postit couldn't write into the notes folder. Click **Settings** and choose a folder you own.
 - **"Could not save settings"** (from the Settings window) — Postit couldn't write `~/.config/postit/postit-config.yaml`. The window stays open so nothing you entered is lost; check that the `.config` folder in your home folder is writable.
 - **"Postit — internal error"** — a bug in Postit itself. The note box stays open with your text in it, so you can still save it; the details in the message are what to include if you report the bug.
