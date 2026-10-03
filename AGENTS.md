@@ -25,7 +25,7 @@ Top level: `postit/` (the app), `docs/` (the User Guide and its screenshot; not 
 
 - `__init__.py` — `APP_NAME` and `UI_POINT_SIZE`, the size of the buttons and the Settings dialog's labels and fields.
 - `note.py` — **the model, no Qt imports.** Timestamp formatting, template rendering, and the file write. Two details worth not "simplifying":
-  - `format_date`/`format_time` build their strings by hand instead of using strftime's `%-m`/`%-I`, which are a glibc extension. The formats (`8/21/2026`, `1:05 PM`) are what the Timex Extension reads, and are deliberately different from the sortable filename timestamp.
+  - `format_date`/`format_time` build their strings by hand instead of using strftime's `%-m`/`%-I`, which are a glibc extension. The formats (`8/21/2026`, `1:05 PM`) are what the Timex Extension reads, and are deliberately different from the filename timestamp (`2026-08-21--01-05-07-PM`, built by `filename_stamp` without strftime's locale-dependent `%p`).
   - `write_note` walks `candidate_paths()` (the stamped name, then `-2`, `-3`, …) and opens each in exclusive-create (`"x"`) mode, so a note is never silently overwritten — not even by one written in the same instant. An empty template path means no template (the note is just the content). It does **not** create the notes folder; see "Deliberate behavior".
 - `config.py` — **the settings, no Qt imports.** The same YAML-config approach as the sibling `sonar` project. Its pieces:
   - `Settings` (two absolute paths; `""` means not set, which is valid for `template`).

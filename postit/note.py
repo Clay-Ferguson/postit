@@ -12,11 +12,14 @@ import itertools
 import os
 from collections.abc import Iterator
 
-# The filename timestamp is sortable and shell-friendly: no slashes, no spaces,
-# no colons. The date and time written *into* the note are a different, more
-# readable pair of formats (see `format_date`/`format_time`) — they're what the
-# Timex Extension reads, so they must keep their slashes and AM/PM.
-FILENAME_FORMAT = "note-%Y-%m-%d--%H-%M-%S.md"
+# The filename timestamp is shell-friendly: no slashes, no spaces, no colons.
+# Its time is 12-hour with a trailing `-AM`/`-PM`, e.g.
+# `note-2026-08-21--01-05-07-PM.md`. The date and time written *into* the note
+# are a different, more readable pair of formats (see `format_date`/
+# `format_time`) — they're what the Timex Extension reads, so they must keep
+# their slashes and AM/PM.
+FILENAME_PREFIX = "note-"
+FILENAME_EXT = ".md"
 
 DATE_PLACEHOLDER = "{date}"
 TIME_PLACEHOLDER = "{time}"
@@ -42,6 +45,18 @@ def format_time(when: dt.datetime) -> str:
     hour = when.hour % 12 or 12
     meridiem = "AM" if when.hour < 12 else "PM"
     return f"{hour}:{when.minute:02d} {meridiem}"
+
+
+def filename_stamp(when: dt.datetime) -> str:
+    """`2026-08-21--01-05-07-PM` — the timestamp part of a note's filename.
+
+    The meridiem is built by hand rather than with strftime's `%p`, which
+    follows the locale (and Qt sets the locale from the environment), so it
+    could come out as something other than AM/PM, or as nothing at all.
+    """
+    hour = when.hour % 12 or 12
+    meridiem = "AM" if when.hour < 12 else "PM"
+    return f"{when:%Y-%m-%d}--{hour:02d}-{when:%M-%S}-{meridiem}"
 
 
 def render(template: str, content: str, when: dt.datetime) -> str:
@@ -74,11 +89,10 @@ def candidate_paths(notes_dir: str, when: dt.datetime) -> Iterator[str]:
     second would collide. Rather than overwrite the first one, the second
     becomes `note-<stamp>-2.md`, the third `-3`, and so on.
     """
-    base = when.strftime(FILENAME_FORMAT)
-    yield os.path.join(notes_dir, base)
-    stem, ext = os.path.splitext(base)
+    stem = FILENAME_PREFIX + filename_stamp(when)
+    yield os.path.join(notes_dir, stem + FILENAME_EXT)
     for suffix in itertools.count(2):
-        yield os.path.join(notes_dir, f"{stem}-{suffix}{ext}")
+        yield os.path.join(notes_dir, f"{stem}-{suffix}{FILENAME_EXT}")
 
 
 def write_note(

@@ -95,7 +95,7 @@ Call the dentist about rescheduling
 Ask about the Thursday slot
 ```
 
-You get a file called `note-2026-08-21--13-05-07.md` containing:
+You get a file called `note-2026-08-21--01-05-07-PM.md` containing:
 
 ```markdown
 ---
@@ -115,11 +115,11 @@ The block between the `---` lines is YAML frontmatter — metadata that markdown
 
 `note-YYYY-MM-DD--HH-MM-SS.md`, using a 24-hour clock. There are no spaces or colons in the name, so the files sort into chronological order in any file manager and are easy to type at a terminal.
 
-Save two notes within the same second and the second one becomes `note-2026-08-21--13-05-07-2.md`. Your first note is never overwritten.
+Save two notes within the same second and the second one becomes `note-2026-08-21--01-05-07-PM-2.md`. Your first note is never overwritten.
 
 ### Why the dates inside look different from the filename
 
-The filename uses `2026-08-21` because it sorts correctly. The `due:` and `start:` fields use `8/21/2026` and `1:05 PM` because that's the format the Timex Extension reads. They're describing the same moment in two formats, on purpose.
+The filename uses `2026-08-21` because it sorts correctly by date. The `due:` and `start:` fields use `8/21/2026` and `1:05 PM` because that's the format the Timex Extension reads. They're describing the same moment in two formats, on purpose.
 
 ## Customizing the Template
 

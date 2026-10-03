@@ -47,8 +47,10 @@ If it is missing, `./start.sh` fails immediately with an unresolved path depende
 
 ```bash
 packaging/build-deb.sh
-sudo apt install ./dist/postit_0.1.0_all.deb
+sudo apt install --reinstall ./dist/postit_0.1.0_all.deb
 ```
+
+`--reinstall` matters when installing over an earlier build: a rebuild keeps the version from `pyproject.toml`, and apt skips a `.deb` whose version is already installed ("postit is already the newest version") without looking at its contents.
 
 Or run `./build.sh`, which does both: it runs `packaging/build-deb.sh`, then asks whether to install the result (default no).
 
@@ -126,7 +128,7 @@ To change the frontmatter — different tags, extra fields, no frontmatter at al
 
 ## Output files
 
-Notes are named `note-YYYY-MM-DD--HH-MM-SS.md` — no slashes, spaces or colons, so they sort chronologically and are painless to type at a shell. If two notes land inside the same second, the second one gets a `-2` suffix (`note-2026-08-21--13-05-07-2.md`) rather than overwriting the first.
+Notes are named `note-YYYY-MM-DD--HH-MM-SS-AM.md` (or `-PM`), with a 12-hour clock — no slashes, spaces or colons, so they are painless to type at a shell. If two notes land inside the same second, the second one gets a `-2` suffix (`note-2026-08-21--01-05-07-PM-2.md`) rather than overwriting the first.
 
 ## Development
 

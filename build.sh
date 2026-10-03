@@ -4,7 +4,7 @@
 #   ./build.sh
 #
 # A convenience wrapper: packaging/build-deb.sh does all the building, and this
-# only offers to run the `sudo apt install` it would otherwise print. The
+# only offers to run the `sudo apt install --reinstall` it would otherwise print. The
 # prompt defaults to no, and is skipped when stdin isn't a terminal, so a
 # scripted run only builds.
 set -euo pipefail
@@ -25,11 +25,14 @@ fi
 [ -t 0 ] || exit 0
 
 echo ""
-read -r -p "Install it now with sudo apt install? [y/N] " answer
+read -r -p "Install it now with sudo apt install --reinstall? [y/N] " answer
 case "$answer" in
   [yY] | [yY][eE][sS])
     # An absolute path, so apt treats it as a file rather than a package name.
-    sudo apt install "$DEB"
+    # --reinstall because a rebuild keeps the version from pyproject.toml, and
+    # without it apt sees that version already installed and skips the .deb
+    # ("postit is already the newest version"). Harmless on a first install.
+    sudo apt install --reinstall "$DEB"
     ;;
   *)
     echo "Not installed."
