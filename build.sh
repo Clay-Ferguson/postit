@@ -4,9 +4,9 @@
 #   ./build.sh
 #
 # A convenience wrapper: packaging/build-deb.sh does all the building, and this
-# only offers to run the `sudo apt install --reinstall` it would otherwise print. The
-# prompt defaults to no, and is skipped when stdin isn't a terminal, so a
-# scripted run only builds.
+# only offers to run the `sudo apt install --reinstall` it would otherwise
+# print. The prompt defaults to no, and is skipped when stdin isn't a terminal,
+# so a scripted run only builds.
 set -euo pipefail
 
 HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
