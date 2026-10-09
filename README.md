@@ -128,7 +128,7 @@ To change the frontmatter — different tags, extra fields, no frontmatter at al
 
 ## Output files
 
-Notes are named `note-YYYY-MM-DD--HH-MM-SS-AM.md` (or `-PM`), with a 12-hour clock — no slashes, spaces or colons, so they are painless to type at a shell. If two notes land inside the same second, the second one gets a `-2` suffix (`note-2026-08-21--01-05-07-PM-2.md`) rather than overwriting the first.
+Notes are named `YYYY-MM-DD--HH-MM-SS-AM.md` (or `-PM`), with a 12-hour clock — no slashes, spaces or colons, so they are painless to type at a shell. If two notes land inside the same second, the second one gets a `-2` suffix (`2026-08-21--01-05-07-PM-2.md`) rather than overwriting the first.
 
 ## Development
 

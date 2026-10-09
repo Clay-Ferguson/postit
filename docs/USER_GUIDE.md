@@ -95,7 +95,7 @@ Call the dentist about rescheduling
 Ask about the Thursday slot
 ```
 
-You get a file called `note-2026-08-21--01-05-07-PM.md` containing:
+You get a file called `2026-08-21--01-05-07-PM.md` containing:
 
 ```markdown
 ---
@@ -113,9 +113,9 @@ The block between the `---` lines is YAML frontmatter — metadata that markdown
 
 ### Filenames
 
-`note-YYYY-MM-DD--HH-MM-SS.md`, using a 24-hour clock. There are no spaces or colons in the name, so the files sort into chronological order in any file manager and are easy to type at a terminal.
+`YYYY-MM-DD--HH-MM-SS.md`, using a 24-hour clock. There are no spaces or colons in the name, so the files sort into chronological order in any file manager and are easy to type at a terminal.
 
-Save two notes within the same second and the second one becomes `note-2026-08-21--01-05-07-PM-2.md`. Your first note is never overwritten.
+Save two notes within the same second and the second one becomes `2026-08-21--01-05-07-PM-2.md`. Your first note is never overwritten.
 
 ### Why the dates inside look different from the filename
 

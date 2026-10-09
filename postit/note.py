@@ -18,7 +18,7 @@ from collections.abc import Iterator
 # are a different, more readable pair of formats (see `format_date`/
 # `format_time`) — they're what the Timex Extension reads, so they must keep
 # their slashes and AM/PM.
-FILENAME_PREFIX = "note-"
+FILENAME_PREFIX = "" # Now going with no template, instead of "note-"
 FILENAME_EXT = ".md"
 
 DATE_PLACEHOLDER = "{date}"
@@ -87,7 +87,7 @@ def candidate_paths(notes_dir: str, when: dt.datetime) -> Iterator[str]:
 
     The timestamp is only second-resolution, so two notes saved in the same
     second would collide. Rather than overwrite the first one, the second
-    becomes `note-<stamp>-2.md`, the third `-3`, and so on.
+    becomes `<stamp>-2.md`, the third `-3`, and so on.
     """
     stem = FILENAME_PREFIX + filename_stamp(when)
     yield os.path.join(notes_dir, stem + FILENAME_EXT)
