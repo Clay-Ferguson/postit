@@ -1,4 +1,4 @@
-"""The note dialog: a text area, with Settings, Save and Cancel below it.
+"""The note dialog: a text area, with Settings, Append, Save and Cancel below it.
 
 The window decoration draws its own frame around the whole window, so the
 dialog adds no border of its own — the content sits directly on the QDialog
@@ -7,11 +7,14 @@ with one level of padding, nothing more.
 
 from __future__ import annotations
 
-from PyQt6.QtGui import QFontDatabase
+import os
+
+from PyQt6.QtGui import QFontDatabase, QTextCursor
 from PyQt6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
     QHBoxLayout,
+    QMessageBox,
     QPlainTextEdit,
     QPushButton,
     QVBoxLayout,
@@ -20,7 +23,8 @@ from PyQt6.QtWidgets import (
 from windowchrome import apply_scrollbars
 
 from . import APP_NAME
-from .config import load_settings
+from .config import load_settings, problem
+from .note import latest_note, read_note
 from .settings_dialog import SettingsDialog
 from .style import BUTTON_STYLE, field_background, field_border
 
@@ -34,7 +38,7 @@ DIALOG_HEIGHT = 500
 
 
 class NoteDialog(QDialog):
-    """A multi-line text area with Settings, Save and Cancel underneath it.
+    """A multi-line text area with Settings, Append, Save and Cancel underneath it.
 
     Save stays disabled until there's something other than whitespace to save,
     so an empty note can never be written. Escape rejects the dialog, which is
@@ -42,11 +46,17 @@ class NoteDialog(QDialog):
 
     Deliberately *no* Ctrl+Enter save accelerator: this is a free-form note, so
     Enter always just means a new line.
+
+    Append swaps the new note for the most recently created one in the notes
+    folder, to be extended or edited; Save then rewrites that file instead of
+    creating another. `note_path()` tells `__main__` which of the two to do.
     """
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setWindowTitle(APP_NAME)
+        # The existing note Append opened, or None while this is a new note.
+        self._note_path: str | None = None
         self.resize(DIALOG_WIDTH, DIALOG_HEIGHT)
 
         # The note is set large and in the desktop's own fixed-width face, asked
@@ -88,8 +98,15 @@ class NoteDialog(QDialog):
         settings_button.setAutoDefault(False)
         settings_button.clicked.connect(self._open_settings)
 
+        # Append sits with Settings, for the same reason: it closes nothing.
+        self._append_button = QPushButton("Append")
+        self._append_button.setStyleSheet(BUTTON_STYLE)
+        self._append_button.setAutoDefault(False)
+        self._append_button.clicked.connect(self._open_latest)
+
         button_row = QHBoxLayout()
         button_row.addWidget(settings_button)
+        button_row.addWidget(self._append_button)
         button_row.addStretch(1)
         button_row.addWidget(buttons)
 
@@ -118,6 +135,68 @@ class NoteDialog(QDialog):
         settings, error = load_settings()
         SettingsDialog(settings, error, parent=self).exec()
         self._text_edit.setFocus()
+
+    def _open_latest(self) -> None:
+        """Load the most recently created note in the notes folder for editing.
+
+        The folder is read from the config now, not at startup, so a change
+        made through Settings since is honored. Only the folder has to be
+        valid: the template plays no part in rewriting a note that exists. Once
+        a note is open the button is disabled — pressing it again could only
+        reopen the same file and throw away the edits.
+        """
+        settings, error = load_settings()
+        issue = error or problem(settings._replace(template=""))
+        if issue:
+            self._append_failed("no notes folder", issue)
+            return
+        try:
+            path = latest_note(settings.notes_dir)
+        except OSError as exc:
+            self._append_failed("could not find the latest note", str(exc))
+            return
+        if path is None:
+            self._append_failed(
+                "no note to append to", f"There are no .md files in\n{settings.notes_dir}"
+            )
+            return
+        name = os.path.basename(path)
+
+        if self._text_edit.toPlainText().strip():
+            answer = QMessageBox.question(
+                self,
+                f"{APP_NAME} — append",
+                f"Replace what you've typed here with {name}?\n\n"
+                "The text typed so far will be discarded.",
+            )
+            if answer != QMessageBox.StandardButton.Yes:
+                self._text_edit.setFocus()
+                return
+
+        try:
+            content = read_note(path)
+        except (OSError, ValueError) as exc:
+            self._append_failed("could not open the latest note", f"{path}\n\n{exc}")
+            return
+
+        self._note_path = path
+        self.setWindowTitle(f"{APP_NAME} — {name}")
+        self._text_edit.setPlainText(content)
+        # Ready to append: the cursor goes after the last line, and the view
+        # scrolls down to it.
+        self._text_edit.moveCursor(QTextCursor.MoveOperation.End)
+        self._text_edit.ensureCursorVisible()
+        self._append_button.setEnabled(False)
+        self._text_edit.setFocus()
+
+    def _append_failed(self, what: str, message: str) -> None:
+        """Explain why Append opened nothing; the note being typed is untouched."""
+        QMessageBox.warning(self, f"{APP_NAME} — {what}", message)
+        self._text_edit.setFocus()
+
+    def note_path(self) -> str | None:
+        """The existing note to rewrite on Save, or None to write a new one."""
+        return self._note_path
 
     def text(self) -> str:
         """The typed note, exactly as entered apart from trailing whitespace."""

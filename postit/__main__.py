@@ -16,7 +16,7 @@ from PyQt6.QtWidgets import QApplication, QDialog, QMessageBox
 
 from . import APP_NAME
 from .config import CONFIG_PATH, DATA_DIR, Settings, load_settings, problem
-from .note import TemplateNotFound, write_note
+from .note import TemplateNotFound, rewrite_note, write_note
 from .note_dialog import NoteDialog
 from .settings_dialog import SettingsDialog
 
@@ -119,7 +119,22 @@ def main() -> int:
     dialog.raise_()
 
     if dialog.exec() != QDialog.DialogCode.Accepted:
-        print("Note cancelled - no file created.")
+        if dialog.note_path():
+            print("Note cancelled - no file changed.")
+        else:
+            print("Note cancelled - no file created.")
+        return 0
+
+    # A note opened with Append goes back where it came from, as typed. The
+    # config plays no part: the path is already known, and the template was
+    # applied when the note was first written.
+    existing = dialog.note_path()
+    if existing:
+        try:
+            rewrite_note(existing, dialog.text())
+        except OSError as exc:
+            return _save_failed(str(exc))
+        print(f"Note saved to: {existing}")
         return 0
 
     # Read again rather than reusing what ensure_settings() returned: the

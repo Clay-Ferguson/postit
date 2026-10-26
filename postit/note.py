@@ -12,6 +12,8 @@ import itertools
 import os
 from collections.abc import Iterator
 
+from .birthtime import birth_time_ns
+
 # The filename timestamp is shell-friendly: no slashes, no spaces, no colons.
 # Its time is 12-hour with a trailing `-AM`/`-PM`, e.g.
 # `note-2026-08-21--01-05-07-PM.md`. The date and time written *into* the note
@@ -124,3 +126,57 @@ def write_note(
             continue
         return path
     raise AssertionError("unreachable: candidate_paths() never ends")
+
+
+def latest_note(notes_dir: str) -> str | None:
+    """The most recently *created* `.md` file in `notes_dir`, or None if none.
+
+    Chosen by each file's birth time alone — not its modification time, and not
+    the timestamp in its name, so a note renamed or written by something other
+    than Postit counts just the same. Only the folder itself is searched, not
+    its subfolders. Two files born in the same nanosecond go to the later name.
+
+    Raises BirthTimeUnavailable if creation times aren't recorded here, or
+    OSError if the folder can't be listed.
+    """
+    latest: tuple[int, str] | None = None
+    latest_path = None
+    with os.scandir(notes_dir) as entries:
+        for entry in entries:
+            if not entry.name.endswith(FILENAME_EXT) or not entry.is_file():
+                continue
+            try:
+                key = (birth_time_ns(entry.path), entry.name)
+            except FileNotFoundError:
+                continue  # deleted since the folder was listed
+            if latest is None or key > latest:
+                latest, latest_path = key, entry.path
+    return latest_path
+
+
+def read_note(path: str) -> str:
+    """The text of an existing note, for Append to open.
+
+    Raises OSError if it can't be read, or UnicodeDecodeError (a ValueError) if
+    it isn't UTF-8 — every note Postit writes is.
+    """
+    with open(path, encoding="utf-8") as handle:
+        return handle.read()
+
+
+def rewrite_note(path: str, content: str) -> None:
+    """Replace the note at `path` with `content`, as typed — no template.
+
+    The file is truncated and rewritten in place rather than replaced through a
+    temporary file. A replacement would be a new file, stamped as created now,
+    and birth time is both the record of when the note was first written and
+    the very thing Append goes by. The cost is that a write failing halfway
+    through leaves the note cut short.
+
+    If the note was deleted while it was open, it is written again at the same
+    path. Raises OSError if the file can't be written.
+    """
+    if not content.endswith("\n"):
+        content += "\n"
+    with open(path, "w", encoding="utf-8") as handle:
+        handle.write(content)

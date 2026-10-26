@@ -61,7 +61,7 @@ When running from the folder, the first launch takes a couple of seconds longer 
 
 ## Writing a Note
 
-The dialog is a text area with **Settings** at the bottom left and **Save** and **Cancel** at the bottom right.
+The dialog is a text area with **Settings** and **Append** at the bottom left and **Save** and **Cancel** at the bottom right.
 
 Type anything you like — it's a plain text box, so multiple lines, blank lines, indentation and pasted text all work. Notes are saved as markdown, so if you write markdown (a `- ` list, a `**bold**` word, a `# heading`) it will render as markdown wherever you read your notes later. If you don't, it's just text.
 
@@ -76,6 +76,16 @@ Click **Save**. The note is written and the dialog closes. Nothing else happens 
 ### Cancelling
 
 Click **Cancel**, or press `Esc`. The dialog closes and nothing is written — no file is created. There is no "are you sure?" prompt, so anything you'd typed is gone.
+
+## Adding to Your Last Note
+
+Remembered something that belongs with the note you just wrote? Click **Append**. The box fills with your most recent note, with the cursor at the very end, ready for you to keep typing — or to change anything already there. Click **Save** and that same note is updated; no new file is created. **Cancel** leaves it exactly as it was.
+
+"Most recent" means the note *file created* most recently in your notes folder — the last one written, whatever it's called and whenever it was last edited. Only `.md` files count, and subfolders aren't searched.
+
+- If you'd already typed something before clicking **Append**, Postit asks before replacing it. Click **No** to keep what you typed.
+- Once a note is open, **Append** greys out, and the note's filename appears in the window title.
+- The template is not applied again. What you see in the box is the whole file, and that is exactly what's saved.
 
 ## Changing Settings
 
@@ -162,6 +172,8 @@ Postit tells you with an error dialog rather than failing silently. The things t
 - **The notes folder or chosen template no longer exists** — it was moved, renamed or deleted while the note box was open. The note you'd typed is not recovered, so re-type it. The next time you launch, Postit opens Settings so you can choose again.
 - **A permissions error** — Postit couldn't write into the notes folder. Click **Settings** and choose a folder you own.
 - **"Could not save settings"** (from the Settings window) — Postit couldn't write `~/.config/postit/postit-config.yaml`. The window stays open so nothing you entered is lost; check that the `.config` folder in your home folder is writable.
+- **"No note to append to"** — **Append** found no `.md` files in your notes folder. Write a note first.
+- **"This system does not record when files were created"** — **Append** relies on the creation time your filesystem keeps for each file. Most do (ext4, btrfs, xfs), but some network and older filesystems don't, and there **Append** can't work.
 - **"Postit — internal error"** — a bug in Postit itself. The note box stays open with your text in it, so you can still save it; the details in the message are what to include if you report the bug.
 
 In every case nothing was written, so there's no half-saved file to clean up.

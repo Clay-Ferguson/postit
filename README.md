@@ -81,12 +81,13 @@ The package is the only way to install Postit. To run it from this checkout inst
 
 ## The dialog
 
-A text area and three buttons.
+A text area and four buttons.
 
 | Action | Result |
 |---|---|
 | **Save** | Writes the note and exits. Disabled while the box is empty or whitespace-only. |
 | **Cancel** or `Esc` | Exits without writing anything. |
+| **Append** | Replaces the box's text with the most recently *created* `.md` file in the notes folder (by the file's creation time — not its modification time or its name), with the cursor at the end. Save then rewrites that file in place, as edited and without the template, instead of creating a new note. Asks first if you've already typed something. |
 | **Settings** | Opens the Settings dialog over the note. What you've typed is kept, and a change applies to the note you're about to save. |
 | `Enter` | Inserts a newline — always. There is no keyboard save shortcut, by design. |
 
@@ -144,7 +145,8 @@ There is deliberately no automated test suite; `./lint.sh` must stay clean. `ruf
 | Path | What it is |
 |---|---|
 | `postit/__main__.py` | Entry point: the startup settings check, `QApplication`, error dialogs. |
-| `postit/note.py` | Timestamps, template rendering, the file write. No Qt — runs headless. |
+| `postit/note.py` | Timestamps, template rendering, the file write, and finding and rewriting the latest note for Append. No Qt — runs headless. |
+| `postit/birthtime.py` | A file's creation time, through `statx(2)` on Linux, where `os.stat` doesn't report it. No Qt. |
 | `postit/config.py` | The config file: load, save, and the one validity rule. No Qt — runs headless. |
 | `postit/note_dialog.py` | `NoteDialog`: the text area and its buttons. |
 | `postit/settings_dialog.py` | `SettingsDialog`: the notes folder and template, with Browse… buttons. |
