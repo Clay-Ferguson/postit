@@ -33,7 +33,7 @@ from .style import BUTTON_STYLE, field_background, field_border
 # point size, so the gap above `UI_POINT_SIZE` is partly making that back.
 NOTE_POINT_SIZE = 16
 
-DIALOG_WIDTH = 700
+DIALOG_WIDTH = 850
 DIALOG_HEIGHT = 500
 
 
